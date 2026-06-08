@@ -66,7 +66,10 @@ def deliberation(state: dict, *, llm, policy_store, table: dict) -> dict:
     # 'policy_store' (không phải 'store') vì LangGraph reserve tên tham số 'store'.
     risk = RiskResult(**state["risk"])
     app = LoanApplication.model_validate(state["application"])
-    citations = policy_store.retrieve(app.loan.purpose or "điều kiện vay vốn", k=2)
+    # Truy vấn theo khía cạnh chính sách (điều kiện vay/lãi suất) + mục đích vay —
+    # không chỉ mục đích, vì mục đích đơn lẻ ("mua xe") không khớp văn bản luật.
+    query = f"điều kiện vay vốn lãi suất {app.loan.purpose or ''}".strip()
+    citations = policy_store.retrieve(query, k=3)
     policy = PolicyResult(compliant=True, citations=citations)
     delib = run_deliberation(risk, policy, llm, table)
     return {"deliberation": delib.model_dump(), "policy": policy.model_dump()}

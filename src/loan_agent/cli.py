@@ -26,6 +26,19 @@ def _print_result(result: dict) -> None:
     for reason in decision["reasons"]:
         print(f"   - {reason}")
 
+    delib = result.get("deliberation") or {}
+    if delib.get("convened") and delib["convened"] != "skip":
+        line = f"  hội đồng : {delib['convened']} → {delib.get('recommendation', '')}"
+        if delib.get("blocking_flags"):
+            line += f" (cờ: {', '.join(delib['blocking_flags'])})"
+        print(line)
+
+    citations = (result.get("policy") or {}).get("citations") or []
+    if citations:
+        print("  chính sách dẫn chiếu:")
+        for c in citations:
+            print(f"   • [{c['source']}] {c.get('dieu') or '?'}: {c['snippet'][:80]}…")
+
 
 def run_batch(path: str) -> None:
     data = json.loads(Path(path).read_text(encoding="utf-8"))

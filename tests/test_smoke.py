@@ -1,6 +1,7 @@
-from loan_agent.config import load_decision_table
+from loan_agent.config import load_decision_table, settings
 from loan_agent.graph import build_graph
 from loan_agent.llm.mock import MockLLM
+from loan_agent.rag.ingest import load_policies
 from loan_agent.rag.keyword_store import KeywordStore
 
 COMPLETE = {
@@ -33,3 +34,12 @@ def test_incomplete_application_waits_for_user():
     result = _graph().invoke({"application": partial_app, "messages": [], "meta": {}})
     assert result.get("meta", {}).get("intake_ready") is False
     assert "decision" not in result
+
+
+def test_deliberation_retrieves_policy_citations():
+    # Truy vấn RAG đã sửa: ca không knock-out phải có trích dẫn chính sách (không rỗng).
+    store = KeywordStore(load_policies(settings.policy_dir))
+    graph = build_graph(MockLLM(), store, load_decision_table())
+    result = graph.invoke({"application": COMPLETE, "messages": [], "meta": {}})
+    assert result["risk"]["knocked_out"] is False
+    assert len(result["policy"]["citations"]) > 0
