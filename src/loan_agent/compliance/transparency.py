@@ -21,6 +21,8 @@ def build_notice(result: dict) -> dict:
     aff = result.get("affordability", {})
     policy = result.get("policy", {})
     outcome = decision.get("outcome", "")
+    dti = risk.get("dti")
+    dti_str = f"{dti:.2f}" if isinstance(dti, (int, float)) else "?"
 
     return {
         "xu_ly_tu_dong": True,
@@ -32,7 +34,7 @@ def build_notice(result: dict) -> dict:
         "ly_do": decision.get("reasons", []),
         "nguyen_tac_thuat_toan": [
             f"Điểm tín dụng {risk.get('score', '?')}/100 so với ngưỡng duyệt trong cấu hình.",
-            f"Tỷ lệ trả nợ trên thu nhập (DTI) {risk.get('dti', '?')}.",
+            f"Tỷ lệ trả nợ trên thu nhập (DTI) {dti_str}.",
             "Kiểm tra điều kiện cứng: tuổi, thu nhập tối thiểu, trần khoản vay.",
             "Quyết định cuối do bộ quy tắc tất định, không do mô hình ngôn ngữ.",
         ],

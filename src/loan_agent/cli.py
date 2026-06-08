@@ -10,13 +10,14 @@ import json
 import sys
 from pathlib import Path
 
-from .compliance.audit import AuditLog, subject_ref
+from .compliance.audit import AuditLog
 from .compliance.transparency import build_notice
 from .config import load_decision_table, settings
 from .graph import build_graph
 from .llm.factory import get_llm
 from .rag.factory import get_store
 from .schemas import LoanApplication
+from .service import run_assessment
 
 
 def _print_result(result: dict) -> None:
@@ -49,33 +50,6 @@ def _print_transparency(notice: dict) -> None:
     )
 
 
-def _assess(graph, application: dict, audit: AuditLog) -> dict:
-    """Chạy thẩm định + ghi nhật ký xử lý dữ liệu cá nhân (NĐ356)."""
-    subj = subject_ref(application)
-    audit.record(
-        "processing_started",
-        subject=subj,
-        purpose="tham_dinh_vay",
-        data_categories=sorted(application.keys()),
-    )
-    result = graph.invoke({"application": application, "messages": [], "meta": {}})
-    delib = result.get("deliberation") or {}
-    if settings.llm_provider == "openai" and delib.get("convened") not in (None, "skip"):
-        audit.record(
-            "cross_border_transfer",
-            subject=subj,
-            recipient="OpenAI",
-            data="anonymized",
-            basis="consent+impact_assessment+DPA",
-        )
-    audit.record(
-        "automated_decision",
-        subject=subj,
-        outcome=result.get("decision", {}).get("outcome"),
-    )
-    return result
-
-
 def run_batch(path: str) -> None:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     graph = build_graph(
@@ -83,7 +57,7 @@ def run_batch(path: str) -> None:
     )
     audit = AuditLog(settings.audit_log_path)
     for case in data.get("applications", []):
-        result = _assess(graph, case["application"], audit)
+        result = run_assessment(graph, case["application"], audit)
         print(f"\n=== {case.get('name', '?')} ===")
         print(f"  kỳ vọng : {case.get('expected_outcome', '-')}")
         _print_result(result)
@@ -198,7 +172,7 @@ def run_interactive() -> None:
     graph = build_graph(
         get_llm(), get_store(), load_decision_table(), max_turns=settings.max_intake_turns
     )
-    result = _assess(graph, app, AuditLog(settings.audit_log_path))
+    result = run_assessment(graph, app, AuditLog(settings.audit_log_path))
     print("=== KẾT QUẢ ===")
     _print_result(result)
     _print_transparency(build_notice(result))
