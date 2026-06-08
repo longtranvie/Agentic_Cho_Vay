@@ -1,4 +1,38 @@
 {
-  "_note": "Hồ sơ vay giả lập cho dev/test (nhóm A+E) — docs/data-requirements.md §6. SKELETON: sẽ thêm các ca đậu/rớt/biên sau.",
-  "applications": []
+  "_note": "Hồ sơ vay giả lập cho dev/test (nhóm A+E) — docs/data-requirements.md §6. Số minh họa.",
+  "applications": [
+    {
+      "name": "Hồ sơ tốt (đậu)",
+      "expected_outcome": "approve",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "mua xe", "term_months": 12},
+        "income": {"monthly": 30000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 32, "occupation": "ky su", "tenure_years": 5},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "name": "Quá tuổi (knock-out)",
+      "expected_outcome": "reject",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 20000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 75, "occupation": "huu tri", "tenure_years": 10},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "name": "Vùng xám (cần xét duyệt)",
+      "expected_outcome": "review",
+      "application": {
+        "loan": {"amount": 40000000, "purpose": "kinh doanh", "term_months": 18},
+        "income": {"monthly": 12000000, "source": "kinh_doanh", "stability": "on_dinh"},
+        "debt": {"total": 50000000, "monthly_payment": 3000000},
+        "profile": {"age": 45, "occupation": "buon ban", "tenure_years": 2},
+        "credit_history": {"had_late_payment": false}
+      }
+    }
+  ]
 }

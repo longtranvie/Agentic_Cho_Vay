@@ -3,47 +3,57 @@
 Hệ thống multi-agent quyết định có cho vay hay không: hội thoại khai thác thông tin
 → hội đồng agent tranh luận phân tích → cổng luật xác định ra quyết định.
 
-> **Trạng thái: SKELETON** — đang dựng khung (cấu trúc thư mục + file stub). Logic
-> sẽ điền sau khi duyệt cấu trúc. Thiết kế đầy đủ ở [docs/](docs/) (đọc
-> [docs/design-review.md](docs/design-review.md) trước).
+> **Trạng thái: VERTICAL SLICE chạy được** (mock LLM + keyword RAG, offline). Tích
+> hợp thật OpenAI + Chroma đã code sẵn, bật bằng env (cần API key + mạng để chạy).
+> Thiết kế đầy đủ ở [docs/](docs/) — đọc [docs/design-review.md](docs/design-review.md)
+> và [docs/superpowers/](docs/superpowers/) (spec + plan).
+
+## Chạy
+
+```bash
+# (tùy chọn) cài deps nếu chạy OpenAI/Chroma thật:
+pip install -r requirements.txt
+
+# Demo offline (mock + keyword, KHÔNG cần key/mạng):
+PYTHONPATH=src python -m loan_agent.cli data/sample_applications.json
+
+# Test (runner không cần pytest):
+python tests/run.py        # 42 test
+
+# Chạy với OpenAI thật (máy có key):
+#   set LOAN_LLM_PROVIDER=openai, LOAN_RAG_BACKEND=chroma, OPENAI_API_KEY=...
+```
 
 ## Cấu trúc
 
 ```
 src/loan_agent/
-├── config.py            # cấu hình (env) + nạp decision table
+├── config.py            # Settings(env) + load_decision_table()
 ├── schemas.py           # Pydantic models (ADR-0007)
-├── state.py             # state của LangGraph (ADR-0001)
-├── graph.py             # build graph: nodes + edges (ADR-0001/0021/0023)
+├── state.py             # LoanState cho LangGraph (ADR-0001)
+├── graph.py             # build_graph(): nodes + conditional edges
 ├── nodes.py             # hàm từng node
-├── cli.py               # chạy thử một phiên
+├── cli.py               # chạy thử (batch)
 ├── tools/financial.py   # phép tính thuần, deterministic (ADR-0004)
 ├── rules/
 │   ├── scorecard.py     # knock-out + chấm điểm (ADR-0014)
-│   └── gate.py          # Decision Gate backstop (ADR-0022)
-├── llm/                 # adapter LLM: base + mock + openai (ADR-0006/0019)
+│   └── gate.py          # Decision Gate bất đối xứng (ADR-0022)
+├── llm/                 # base + mock (offline) + openai_client (thật) + factory
 ├── pii/anonymizer.py    # ẩn danh PII trước egress (ADR-0019)
-├── rag/store.py         # truy hồi chính sách (ADR-0005/0016)
+├── rag/                 # base + keyword (offline) + chroma (thật) + ingest + factory
 └── agents/
     ├── intake.py        # nhân viên ảo, slot-filling (ADR-0003/0011)
-    └── deliberation.py  # hội đồng tranh luận (ADR-0021/0023)
+    └── deliberation.py  # hội đồng tranh luận + convene check (ADR-0021/0023)
 
-config/decision_table.json   # tham số quyết định (expert-set, có version)
-data/                        # dữ liệu giả lập: applications + policies
-tests/                       # test deterministic core (+ runner không cần pytest)
-docs/                        # tài liệu thiết kế + ADR
+config/decision_table.json   # tham số expert-set, có version (chờ D1 duyệt)
+data/                        # hồ sơ mẫu + tài liệu chính sách mẫu
+tests/                       # 42 test + runner
+docs/                        # thiết kế + 23 ADR + spec/plan
 ```
 
-## Chạy (sau khi điền logic)
-
-```bash
-pip install -r requirements.txt          # (môi trường hiện chặn mạng)
-cp .env.example .env                      # mặc định LLM provider = mock (offline)
-python -m loan_agent.cli                  # chạy thử một phiên
-python tests/run.py                       # chạy test (không cần pytest)
-```
-
-## Nguyên tắc thiết kế (tóm tắt)
-- Quyết định **xác định** (rule engine), agent tranh luận chỉ **phân tích** (ADR-0009/0022).
+## Nguyên tắc thiết kế
+- Quyết định **xác định** (rule engine); agent tranh luận chỉ **phân tích** — chỉ làm
+  chặt hơn, không tự duyệt (ADR-0009/0022).
 - **Số do code**, không do LLM (ADR-0004). **Degrade an toàn**: lỗi → không auto-duyệt.
 - **Ẩn danh PII** trước khi gửi ra ngoài (ADR-0019). Tham số ở **config có version**.
+- Đổi backend (mock↔openai, keyword↔chroma) = **đổi env, không sửa caller**.

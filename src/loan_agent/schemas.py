@@ -155,6 +155,14 @@ class Deliberation(BaseModel):
     blocking_flags: list[str] = Field(default_factory=list)
 
 
+class JudgeVerdict(BaseModel):
+    """Moderator/Judge tổng hợp (debate-protocol.md §5). Không tự chốt outcome."""
+
+    recommendation: str = "lean_review"  # lean_approve | lean_review | lean_reject
+    confidence: str = "medium"
+    blocking_flags: list[str] = Field(default_factory=list)
+
+
 class Decision(BaseModel):
     """Quyết định cuối từ Decision Gate (ADR-0022). Outcome do luật xác định."""
 
