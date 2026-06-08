@@ -71,8 +71,11 @@ def deliberation(state: dict, *, llm, policy_store, table: dict) -> dict:
     query = f"điều kiện vay vốn lãi suất {app.loan.purpose or ''}".strip()
     citations = policy_store.retrieve(query, k=3)
     policy = PolicyResult(compliant=True, citations=citations)
-    delib = run_deliberation(risk, policy, llm, table)
-    return {"deliberation": delib.model_dump(), "policy": policy.model_dump()}
+    delib = run_deliberation(risk, policy, llm, table, app)
+    return {
+        "deliberation": delib.model_dump(mode="json"),
+        "policy": policy.model_dump(mode="json"),
+    }
 
 
 def decision_gate(state: dict, *, table: dict) -> dict:

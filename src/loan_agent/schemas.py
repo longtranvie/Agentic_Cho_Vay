@@ -33,6 +33,18 @@ class DecisionOutcome(str, Enum):
     review = "review"
 
 
+class Stance(str, Enum):
+    lean_approve = "lean_approve"
+    neutral = "neutral"
+    lean_reject = "lean_reject"
+
+
+class Recommendation(str, Enum):
+    lean_approve = "lean_approve"
+    lean_review = "lean_review"
+    lean_reject = "lean_reject"
+
+
 # --- Hồ sơ vay (slot-filling) -------------------------------------------
 
 
@@ -139,7 +151,7 @@ class AgentTurn(BaseModel):
     """Một lượt phát biểu của agent trong hội đồng (debate-protocol.md §4)."""
 
     role: str
-    stance: str = "neutral"  # lean_approve | neutral | lean_reject
+    stance: Stance = Stance.neutral
     arguments: list[str] = Field(default_factory=list)
     flags_raised: list[str] = Field(default_factory=list)
     rebuttals: list[str] = Field(default_factory=list)
@@ -150,7 +162,7 @@ class Deliberation(BaseModel):
 
     convened: str = "skip"  # skip | light | full
     transcript: list[dict] = Field(default_factory=list)
-    recommendation: str = ""  # lean_approve | lean_review | lean_reject
+    recommendation: Recommendation = Recommendation.lean_review
     confidence: str = "medium"
     blocking_flags: list[str] = Field(default_factory=list)
 
@@ -158,7 +170,7 @@ class Deliberation(BaseModel):
 class JudgeVerdict(BaseModel):
     """Moderator/Judge tổng hợp (debate-protocol.md §5). Không tự chốt outcome."""
 
-    recommendation: str = "lean_review"  # lean_approve | lean_review | lean_reject
+    recommendation: Recommendation = Recommendation.lean_review
     confidence: str = "medium"
     blocking_flags: list[str] = Field(default_factory=list)
 

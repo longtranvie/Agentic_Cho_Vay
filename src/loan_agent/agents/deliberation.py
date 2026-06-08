@@ -1,7 +1,8 @@
 """Hội đồng tranh luận — ADR-0021/0023, docs/debate-protocol.md.
 
 convene_check (deterministic) → vòng phát biểu/phản biện (mock/openai) → Judge tổng
-hợp. Tranh luận chỉ PHÂN TÍCH; outcome do Decision Gate. Mock không tự raise cờ.
+hợp. Tranh luận chỉ PHÂN TÍCH; outcome do Decision Gate. Cờ rủi ro CHỈ nhận từ tập
+khóa cấu hình (decision_table["blocking_flags"]) — cờ ngoài danh sách bị loại.
 """
 
 from __future__ import annotations
@@ -10,7 +11,9 @@ from ..schemas import (
     AgentTurn,
     Deliberation,
     JudgeVerdict,
+    LoanApplication,
     PolicyResult,
+    Recommendation,
     RiskResult,
 )
 
@@ -31,35 +34,68 @@ def convene_check(risk: RiskResult, policy: PolicyResult, table: dict) -> str:
     return "full"
 
 
+def _case_brief(app: LoanApplication, risk: RiskResult) -> str:
+    return (
+        f"Khoản vay {app.loan.amount:,.0f}đ, kỳ hạn {app.loan.term_months} tháng, "
+        f"mục đích '{app.loan.purpose}'. Thu nhập {app.income.monthly:,.0f}đ/tháng, "
+        f"trả nợ hiện tại {app.debt.monthly_payment or 0:,.0f}đ/tháng. "
+        f"Điểm rủi ro {risk.score}/100, DTI {risk.dti:.2f}, band '{risk.band}'."
+    )
+
+
+def _format_citations(policy: PolicyResult) -> str:
+    if not policy.citations:
+        return "(không có trích dẫn chính sách)"
+    return "\n".join(
+        f"- [{c.source}] {c.dieu or ''}: {c.snippet}" for c in policy.citations
+    )
+
+
 def run_deliberation(
-    risk: RiskResult, policy: PolicyResult, llm, table: dict
+    risk: RiskResult,
+    policy: PolicyResult,
+    llm,
+    table: dict,
+    app: LoanApplication,
 ) -> Deliberation:
     mode = convene_check(risk, policy, table)
     if mode == "skip":
         rec = (
-            "lean_reject"
+            Recommendation.lean_reject
             if risk.score < table["score_bands"]["review_min"]
-            else "lean_approve"
+            else Recommendation.lean_approve
         )
         return Deliberation(convened="skip", recommendation=rec, blocking_flags=[])
 
+    brief = _case_brief(app, risk)
+    cites = _format_citations(policy)
     roles = _ROLES_LIGHT if mode == "light" else _ROLES_FULL
     transcript: list[dict] = []
     for role in roles:
-        context = (
-            f"Bạn là {role}. Điểm rủi ro {risk.score}, DTI {risk.dti:.2f}. "
-            f"Phân tích hồ sơ và nêu quan điểm."
+        prompt = (
+            f"Bạn là {role} trong HỘI ĐỒNG THẨM ĐỊNH KHOẢN VAY.\n"
+            f"Hồ sơ: {brief}\n"
+            f"Chính sách liên quan:\n{cites}\n"
+            f"Nêu quan điểm (stance: lean_approve / neutral / lean_reject) và lập luận "
+            f"ngắn gọn, BÁM dữ liệu hồ sơ và chính sách trên (không tranh luận chung chung)."
         )
-        transcript.append(llm.structured(context, AgentTurn).model_dump())
+        transcript.append(llm.structured(prompt, AgentTurn).model_dump(mode="json"))
 
-    verdict = llm.structured(
-        f"Bạn là Judge. Tổng hợp tranh luận, điểm {risk.score}. Cho khuyến nghị + cờ rủi ro.",
-        JudgeVerdict,
+    allowed = ", ".join(table["blocking_flags"].keys())
+    verdict_prompt = (
+        f"Bạn là Judge tổng hợp HỘI ĐỒNG THẨM ĐỊNH KHOẢN VAY.\n"
+        f"Hồ sơ: {brief}\n"
+        f"Đưa khuyến nghị (recommendation: lean_approve / lean_review / lean_reject). "
+        f"CHỈ nêu cờ rủi ro (blocking_flags) NẾU thực sự có vấn đề, và phải chọn TRONG "
+        f"danh sách: [{allowed}]. TUYỆT ĐỐI không tạo cờ ngoài danh sách; không có thì để rỗng."
     )
+    verdict = llm.structured(verdict_prompt, JudgeVerdict)
+    # Lọc cờ: chỉ giữ cờ thuộc bảng cấu hình (LLM thật có thể bịa cờ ngoài danh sách).
+    flags = [f for f in verdict.blocking_flags if f in table["blocking_flags"]]
     return Deliberation(
         convened=mode,
         transcript=transcript,
         recommendation=verdict.recommendation,
         confidence=verdict.confidence,
-        blocking_flags=verdict.blocking_flags,
+        blocking_flags=flags,
     )
