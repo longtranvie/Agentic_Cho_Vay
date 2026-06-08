@@ -35,7 +35,7 @@ POST /applications/{id}/resume     → (nội bộ) nối tiếp sau khi ngườ
 - **Redact PII trong văn bản tự do** của user (outbound).
 - Mapping pseudonym ↔ danh tính giữ nội bộ (Postgres).
 - Secrets (OpenAI key, DB creds) trong **AWS Secrets Manager**, không nằm trong repo.
-- **⚠️ Mở:** pháp chế Vapp xác nhận mức ẩn danh có đủ tuân thủ Nghị định 13 & NHNN.
+- **⚠️ Mở:** pháp chế Vapp xác nhận mức ẩn danh có đủ tuân thủ Luật 91/2025 / NĐ 356/2025 & NHNN.
 
 ## 4. Observability ([PR-3]) — *trace cũng phải sạch PII (ADR-0019)*
 

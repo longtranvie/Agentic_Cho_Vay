@@ -15,7 +15,7 @@ kiến trúc → quyết sớm) và **dữ liệu** (để hệ thống quyết 
 ### Nhóm pháp lý (ưu tiên cao nhất — có thể đổi kiến trúc)
 
 **L1 — Đường xử lý PII khi dùng OpenAI**
-- *Vấn đề:* Hồ sơ vay là **dữ liệu cá nhân nhạy cảm** (Nghị định 13, Điều 2.4.h);
+- *Vấn đề:* Hồ sơ vay là **dữ liệu cá nhân nhạy cảm** (NĐ 356/2025 Điều 4 — thông tin tài chính/tín dụng là nhạy cảm);
   gửi sang OpenAI = **chuyển ra nước ngoài** (Điều 25). Ẩn danh là *cần nhưng có
   thể chưa đủ*.
 - *Hai đường:*
@@ -70,9 +70,9 @@ kiến trúc → quyết sớm) và **dữ liệu** (để hệ thống quyết 
 
 | # | Câu hỏi | Vì sao quan trọng | Chủ trì | Mức |
 |---|---|---|---|---|
-| L1 | **PII sang OpenAI: chọn đường (I) tuân thủ cross-border đầy đủ hay (II) giữ PII trong nước (hybrid)?** Nghị định 13 Điều 25: cần hồ sơ đánh giá tác động + gửi Bộ Công an 60 ngày + đồng ý người dùng + DPA. Ẩn danh là cần nhưng có thể chưa đủ. | Có thể đổi cả lựa chọn LLM/kiến trúc ([ADR-0019](adr/0019-an-danh-pii.md)) | Pháp chế | 🔴 |
+| L1 | **PII sang OpenAI: chọn đường (I) tuân thủ cross-border đầy đủ hay (II) giữ PII trong nước (hybrid)?** NĐ 356/2025 (thay NĐ13): cần hồ sơ đánh giá tác động chuyển dữ liệu xuyên biên giới + nộp 60 ngày + đồng ý người dùng + DPA. Ẩn danh là cần nhưng có thể chưa đủ. | Có thể đổi cả lựa chọn LLM/kiến trúc ([ADR-0019](adr/0019-an-danh-pii.md)) | Pháp chế | 🔴 |
 | L2 | **Vapp thuộc loại hình nào** (ngân hàng / công ty tài chính / fintech hợp tác bên cho vay)? | Quyết định chế độ pháp lý: TT39 (chung) hay TT43 (**trần 100tr/khách**) → ảnh hưởng knock-out | Pháp chế | 🔴 |
-| L3 | Có cần lấy **sự đồng ý người dùng** cho xử lý/chuyển dữ liệu ngay trong luồng onboarding không? | Điều 11 NĐ13: đồng ý phải rõ ràng | Pháp chế | 🟡 |
+| L3 | Có cần lấy **sự đồng ý người dùng** cho xử lý/chuyển dữ liệu ngay trong luồng onboarding không? | NĐ 356/2025 Điều 6: đồng ý phải kiểm chứng được, cấm mặc định | Pháp chế | 🟡 |
 | L4 | Trần lãi suất áp dụng cho sản phẩm Vapp (theo Điều 13 TT39 & quy định hiện hành)? | Nạp vào config lãi ([ADR-0015](adr/0015-lai-suat-co-dinh.md)) | Pháp chế + Rủi ro | 🟡 |
 
 ## 2. Dữ liệu

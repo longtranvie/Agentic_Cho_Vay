@@ -6,8 +6,9 @@
 
 ## Bối cảnh
 Hệ thống dùng OpenAI (máy chủ nước ngoài). Hồ sơ vay chứa **PII nhạy cảm** (danh
-tính, CCCD, SĐT, thu nhập, nợ). Chuyển PII ra nước ngoài đụng **Nghị định 13/2023
-về bảo vệ DLCN** và quy định bảo mật khách hàng tài chính của NHNN.
+tính, CCCD, SĐT, thu nhập, nợ). Chuyển PII ra nước ngoài đụng **Luật Bảo vệ dữ liệu
+cá nhân 2025 (số 91/2025/QH15) và Nghị định 356/2025/NĐ-CP** (hiệu lực 01/01/2026,
+thay Nghị định 13/2023) cùng quy định bảo mật khách hàng tài chính của NHNN.
 
 ## Quyết định
 **Ẩn danh hóa (anonymize/pseudonymize) dữ liệu TRƯỚC khi gửi ra bất kỳ dịch vụ
@@ -25,7 +26,7 @@ ngoài nào** — không chỉ OpenAI mà cả **observability (LangSmith), log*
 - Nguyên tắc nhất quán: **mọi dữ liệu rời hệ thống đều phải sạch PII** (kể cả trace/log).
 
 ## Phương án đã cân nhắc
-- **OpenAI zero-retention, gửi nguyên PII** — dữ liệu vẫn rời VN, rủi ro Nghị định 13.
+- **OpenAI zero-retention, gửi nguyên PII** — dữ liệu vẫn rời VN, rủi ro theo Luật 91/2025 / NĐ 356/2025.
 - **Model nội bộ/self-host cho phần PII (hybrid)** — an toàn nhất nhưng phức tạp,
   đi ngược lựa chọn OpenAI. Giữ làm phương án dự phòng.
 
@@ -35,17 +36,27 @@ ngoài nào** — không chỉ OpenAI mà cả **observability (LangSmith), log*
   rủi ro tồn dư → **vẫn cần pháp chế Vapp xác nhận** mức ẩn danh có đủ tuân thủ không.
 - (−) Thêm lớp xử lý (detection/redaction) + chi phí; cần test độ phủ redaction.
 
-## ⚠️ Cập nhật theo khảo sát Nghị định 13/2023 (toàn văn)
+## ⚠️ Cập nhật theo Luật 91/2025 + Nghị định 356/2025 (hiệu lực 01/01/2026)
 
-Khảo sát văn bản thật cho thấy **ẩn danh là cần nhưng có thể CHƯA ĐỦ**:
-- **Điều 2.4.h**: thông tin khách hàng của TCTD (định danh, tài khoản, tiền gửi…)
-  là **dữ liệu cá nhân NHẠY CẢM** → bảo vệ tăng cường (Điều 28).
-- **Điều 25 (chuyển ra nước ngoài)**: nếu gửi sang OpenAI thì cần **Hồ sơ đánh giá
-  tác động**, gửi **Bộ Công an trong 60 ngày**, **sự đồng ý** người dùng (Điều 11:
-  rõ ràng; im lặng ≠ đồng ý), và **văn bản ràng buộc/DPA** với bên nhận.
-- **Không có miễn trừ rõ ràng cho dữ liệu ẩn danh.** Trong một phiên thẩm định, dữ
-  liệu luôn gắn với người định danh được (phải quyết định *về chính người đó*);
-  pseudonym có mapping ⇒ vẫn là dữ liệu cá nhân.
+> Sửa 2026-06-08: Nghị định 13/2023 đã **hết hiệu lực**, thay bằng **Luật BVDLCN 2025
+> (91/2025/QH15)** + **NĐ 356/2025/NĐ-CP**. Số Điều dưới đây theo NĐ356 — đối chiếu
+> bản chính thức (chinhphu.vn) khi làm việc với pháp chế.
+
+Văn bản hiện hành cho thấy **ẩn danh là cần nhưng có thể CHƯA ĐỦ**:
+- **Dữ liệu nhạy cảm (NĐ356 Điều 4)**: **thông tin tài chính, tín dụng** được liệt kê
+  rõ là **dữ liệu cá nhân nhạy cảm** → nghĩa vụ bảo vệ tăng cường.
+- **Chuyển ra nước ngoài**: gửi sang OpenAI cần **Hồ sơ đánh giá tác động chuyển dữ
+  liệu xuyên biên giới** (mục đích, loại dữ liệu, biện pháp bảo mật, đánh giá rủi ro),
+  **nộp trong 60 ngày**, kèm **sự đồng ý** người dùng và **DPA** với bên nhận.
+- **Sự đồng ý (NĐ356 Điều 6)**: phải **kiểm chứng được**; **cấm mặc định đồng ý**; với
+  dữ liệu nhạy cảm phải thông báo rõ đó là dữ liệu nhạy cảm.
+- **MỚI — Lĩnh vực tài chính-ngân hàng**: phải **ghi nhật ký toàn bộ hoạt động xử lý**
+  + **thông báo sự cố lộ/mất dữ liệu nhạy cảm trong 72 giờ**.
+- **MỚI — Xử lý tự động & AI**: hệ thống quyết định cho vay tự động phải **thông báo cho
+  người dùng về việc xử lý tự động** và **giải thích nguyên tắc hoạt động của thuật
+  toán** → ảnh hưởng thiết kế phần giải trình quyết định (gắn với trích dẫn chính sách).
+- **Không có miễn trừ rõ ràng cho dữ liệu ẩn danh.** Trong một phiên thẩm định, dữ liệu
+  luôn gắn với người định danh được; pseudonym có mapping ⇒ vẫn là dữ liệu cá nhân.
 
 → Câu hỏi cho pháp chế **không còn là "ẩn danh đủ chưa"** mà là chọn 1 trong 2 đường:
 

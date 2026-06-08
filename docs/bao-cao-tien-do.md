@@ -27,7 +27,7 @@ quyết. **Nhóm (c) là đường găng — cần lãnh đạo hỗ trợ thúc
 | Tài liệu thiết kế + 23 quyết định kiến trúc (ADR) | ✅ Hoàn thành | Phục vụ kiểm toán pháp lý về sau |
 | Lõi quyết định tất định (tính trả nợ, chấm điểm, lớp loại thẳng, cổng quyết định) | ✅ Hoàn thành + kiểm thử | Quyết định **bằng quy tắc**, không để AI tự duyệt |
 | Quy trình điều phối đa-agent (hội thoại khai thác → hội đồng phân tích → ra quyết định) | ✅ Chạy thử end-to-end | Có cơ chế "hội đồng tranh luận" để soi ca rủi ro |
-| Ẩn danh dữ liệu cá nhân trước khi gửi AI | ✅ Hoàn thành | Tuân thủ Nghị định 13/2023 |
+| Ẩn danh dữ liệu cá nhân trước khi gửi AI | ✅ Hoàn thành | Theo Luật BVDLCN 2025 / NĐ 356/2025 |
 | Kiểm thử tự động | ✅ **44/44 đạt** | Chạy được không cần mạng |
 
 **Nguyên tắc thiết kế then chốt:** AI chỉ **hội thoại và phân tích**; **con số và quyết

@@ -35,11 +35,11 @@ Không chỉ bảng điểm scorecard, mà gồm (tất cả **versioned**, do r
 ### 4a. Tài liệu chính sách (nhóm C) — tiếng Việt, công khai ✅
 | Văn bản | Vai trò | Nguồn |
 |---|---|---|
-| Thông tư 39/2016/TT-NHNN | Hoạt động cho vay TCTD | [thuvienphapluat](https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Thong-tu-39-2016-TT-NHNN-hoat-dong-cho-vay-cua-to-chuc-tin-dung-chi-nhanh-ngan-hang-nuoc-ngoai-338877.aspx) |
+| VBHN 06/VBHN-NHNN 2026 (TT39 + TT06/2023 + TT12/2024 + TT52/2025) | Hoạt động cho vay TCTD — **bản hợp nhất hiện hành** | [thuvienphapluat](https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Van-ban-hop-nhat-06-VBHN-NHNN-2026-Thong-tu-hoat-dong-cho-vay-cua-to-chuc-tin-dung-doi-voi-khach-hang-692624.aspx) |
 | Thông tư 12/2024/TT-NHNN | Sửa đổi TT39 (hiệu lực 1/7/2024) | [luatvietnam](https://luatvietnam.vn/tai-chinh/thong-tu-12-2024-tt-nhnn-sua-doi-tt-39-2016-tt-nhnn-quy-dinh-ve-hoat-dong-cho-vay-358296-d1.html) |
 | Thông tư 43/2016/TT-NHNN | Cho vay tiêu dùng (công ty tài chính); **trần 100tr/khách** | [thuvienphapluat](https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Thong-tu-43-2016-TT-NHNN-cho-vay-tieu-dung-cua-cong-ty-tai-chinh-326281.aspx) |
 | Thông tư 18/2019/TT-NHNN | Sửa đổi TT43 | [luatvietnam](https://luatvietnam.vn/tai-chinh/thong-tu-18-2019-tt-nhnn-sua-doi-thong-tu-43-2016-cho-vay-tieu-dung-cua-cong-ty-tai-chinh-178364-d1.html) |
-| Nghị định 13/2023/NĐ-CP | Bảo vệ DLCN (cho phần ẩn danh PII) | [toàn văn chinhphu](https://xaydungchinhsach.chinhphu.vn/toan-van-nghi-dinh-13-2023-nd-cp-bao-ve-du-lieu-ca-nhan-119230516104357809.htm) |
+| Luật 91/2025/QH15 + NĐ 356/2025/NĐ-CP | Bảo vệ DLCN — **thay NĐ13/2023** (cho phần ẩn danh PII) | [NĐ356 chinhphu](https://vanban.chinhphu.vn/?pageid=27160&docid=216387) |
 
 > Cấu trúc Điều/Khoản/Điểm đã khảo sát từ TT39 → schema chunk chi tiết: [rag-design.md §2](rag-design.md).
 > Đây là **lớp pháp lý**; chính sách **sản phẩm nội bộ Vapp** vẫn phải do Vapp cấp.
@@ -69,7 +69,7 @@ nhân chỉ xem hồ sơ mình. → CIC là **việc tích hợp**, không phả
 | A. Schema input | Đối chiếu feature Home Credit | Dữ liệu Vapp |
 
 **An toàn PII khi dev:** dùng văn bản công khai (RAG) + Home Credit (đã ẩn danh sẵn)
-→ không đụng Nghị định 13 trong lúc phát triển.
+→ không đụng Luật 91/2025 / NĐ 356/2025 trong lúc phát triển.
 
 ## 6. Đề xuất bộ dữ liệu giả lập cho dev
 

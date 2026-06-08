@@ -53,11 +53,11 @@ Chi tiết: [integration-infra.md](integration-infra.md).
 
 ## 6. Dữ liệu & pháp lý (điểm cần chú ý)
 
-- **Chính sách (RAG):** văn bản NHNN công khai có sẵn (TT39/12-2024/43/18-2019, NĐ13);
+- **Chính sách (RAG):** văn bản NHNN công khai có sẵn (VBHN 06/2026 gồm TT39+12/2024+52/2025, TT43/18-2019, NĐ 356/2025);
   chính sách nội bộ Vapp cần cấp thêm.
 - **Dữ liệu vay-trả thật tiếng Việt:** không công khai (CIC đóng) → dev dùng proxy
   (Home Credit) + dữ liệu giả lập.
-- **⚠️ Pháp lý (quan trọng nhất):** Nghị định 13 — dữ liệu tài chính = **nhạy cảm**;
+- **⚠️ Pháp lý (quan trọng nhất):** Luật 91/2025 + NĐ 356/2025 — dữ liệu tài chính = **nhạy cảm**;
   gửi OpenAI = **chuyển ra nước ngoài** (cần đánh giá tác động + báo Bộ Công an +
   đồng ý người dùng + DPA). **Ẩn danh là cần nhưng có thể chưa đủ.**
 Chi tiết: [data-requirements.md](data-requirements.md), [ADR-0019](adr/0019-an-danh-pii.md).
