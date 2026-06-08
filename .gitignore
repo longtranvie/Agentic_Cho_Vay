@@ -147,6 +147,10 @@ activemq-data/
 # SageMath parsed files
 *.sage.py
 
+# Local CA bundle (máy-cụ-thể, có thể chứa CA của proxy doanh nghiệp — không commit)
+corp-ca-bundle.pem
+*.pem
+
 # Environments
 .env
 .envrc
