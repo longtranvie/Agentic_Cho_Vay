@@ -38,5 +38,7 @@ def _chunk_markdown(text: str, source: str) -> list[dict]:
 def load_policies(policy_dir: str) -> list[dict]:
     docs: list[dict] = []
     for path in sorted(Path(policy_dir).glob("*.md")):
+        if path.name.lower() == "readme.md":  # file mục lục, không phải văn bản chính sách
+            continue
         docs.extend(_chunk_markdown(path.read_text(encoding="utf-8"), path.stem))
     return docs

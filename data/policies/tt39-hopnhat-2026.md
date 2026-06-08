@@ -31,3 +31,23 @@ hàng, KHÔNG bắt buộc phải có phương án sử dụng vốn khả thi.
 Tổ chức tín dụng được cho vay bằng phương tiện điện tử; phải nhận biết và xác minh khách
 hàng (gồm yếu tố sinh trắc học khi áp dụng), lưu trữ dữ liệu an toàn, quản lý rủi ro, và
 phải đặt hạn mức tổng dư nợ cho vay qua phương tiện điện tử đối với một khách hàng.
+
+## Điều 4. Nguyên tắc cho vay, vay vốn
+Hoạt động cho vay thực hiện theo thỏa thuận giữa tổ chức tín dụng và khách hàng, phù hợp
+quy định pháp luật. Khách hàng vay phải sử dụng vốn đúng mục đích, hoàn trả nợ gốc và lãi
+đúng hạn đã thỏa thuận.
+
+## Điều 9. Hồ sơ đề nghị vay vốn
+Khi có nhu cầu vay, khách hàng nộp tài liệu chứng minh đủ điều kiện vay vốn (Điều 7) cùng
+tài liệu khác theo yêu cầu của tổ chức tín dụng, làm cơ sở chứng minh khả năng tài chính
+và tính khả thi của mục đích vay (khoản vay nhỏ được giảm nhẹ yêu cầu — xem TT 12/2024).
+
+## Điều 17. Thẩm định và quyết định cho vay
+Tổ chức tín dụng thẩm định khả năng đáp ứng điều kiện vay vốn (Điều 7); được dùng hệ
+thống xếp hạng tín dụng nội bộ kết hợp thông tin từ Trung tâm Thông tin tín dụng quốc gia
+(CIC). Phải TÁCH chức năng thẩm định khỏi chức năng quyết định cho vay, và thông báo lý do
+từ chối khi khách hàng yêu cầu.
+
+## Lãi suất chậm trả / quá hạn (Điều 13 khoản 4)
+Nợ gốc quá hạn: lãi suất theo thỏa thuận nhưng không vượt 150% lãi suất cho vay trong hạn
+tại thời điểm chuyển nợ quá hạn. Lãi trên số lãi chậm trả: không vượt 10%/năm.
