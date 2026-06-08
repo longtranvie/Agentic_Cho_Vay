@@ -1,0 +1,31 @@
+{
+  "_note": "EXPERT-SET MINH HỌA — chờ bộ phận rủi ro Vapp duyệt (open-questions D1). Mọi con số là placeholder.",
+  "version": "expert-0",
+  "knockout": {
+    "min_age": 18,
+    "max_age": 70,
+    "min_income": 1,
+    "dti_abs_max": 0.6
+  },
+  "scorecard": {
+    "capacity": {
+      "dti": [[0.3, 30], [0.4, 15], [0.5, 5], [9, -20]],
+      "lti": [[2, 15], [3, 5], [99, -10]]
+    },
+    "willingness": {
+      "late_payment": {"false": 25, "true": -15},
+      "tenure_years": [[1, 0], [3, 8], [99, 15]],
+      "stability": {"on_dinh": 15, "khong_on_dinh": 0}
+    }
+  },
+  "score_bands": {"approve_min": 70, "review_min": 40},
+  "interest_rate": {"annual": 0.18},
+  "convene": {"clear_approve_min": 75, "trust_required": true},
+  "blocking_flags": {
+    "data_inconsistency": "review",
+    "unverifiable_critical_data": "review",
+    "affordability_borderline": "review",
+    "regulatory_concern": "reject",
+    "fraud_signal": "reject"
+  }
+}
