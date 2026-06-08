@@ -9,9 +9,12 @@ import json
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+# Nạp .env vào os.environ để OPENAI_API_KEY (không prefix) cũng được nhận.
+load_dotenv(PROJECT_ROOT / ".env")
 DEFAULT_DECISION_TABLE = PROJECT_ROOT / "config" / "decision_table.json"
 
 
@@ -36,11 +39,16 @@ class Settings(BaseSettings):
     # Hội thoại intake (ADR-0003)
     max_intake_turns: int = 12
 
+    # CA bundle tùy chỉnh (chạy sau proxy MITM/doanh nghiệp). Rỗng = dùng mặc định.
+    ca_bundle: str = ""
+
     openai_api_key: str = ""
 
     def model_post_init(self, __context) -> None:
         if not self.openai_api_key:
-            object.__setattr__(self, "openai_api_key", os.getenv("OPENAI_API_KEY", ""))
+            object.__setattr__(
+                self, "openai_api_key", os.getenv("OPENAI_API_KEY", "").strip()
+            )
 
 
 settings = Settings()
@@ -52,3 +60,17 @@ def load_decision_table(path: str | None = None) -> dict:
     if not p.is_absolute():
         p = PROJECT_ROOT / p
     return json.loads(p.read_text(encoding="utf-8"))
+
+
+def ssl_http_client(s=None):
+    """httpx.Client với CA bundle tùy chỉnh (chạy sau proxy MITM), hoặc None.
+
+    Ưu tiên LOAN_CA_BUNDLE, fallback biến chuẩn SSL_CERT_FILE. Trả None nếu không
+    cấu hình → ChatOpenAI/OpenAIEmbeddings dùng CA mặc định (certifi).
+    """
+    ca = getattr(s or settings, "ca_bundle", "") or os.getenv("SSL_CERT_FILE", "")
+    if not ca:
+        return None
+    import httpx
+
+    return httpx.Client(verify=ca)

@@ -14,9 +14,15 @@ class ChromaStore:
         import chromadb
         from langchain_openai import OpenAIEmbeddings
 
-        self._embed = OpenAIEmbeddings(
+        from ..config import ssl_http_client
+
+        embed_kwargs = dict(
             model=settings.embedding_model, api_key=settings.openai_api_key
         )
+        http_client = ssl_http_client(settings)  # CA tùy chỉnh nếu cấu hình
+        if http_client is not None:
+            embed_kwargs["http_client"] = http_client
+        self._embed = OpenAIEmbeddings(**embed_kwargs)
         client = chromadb.Client()
         self._col = client.get_or_create_collection("policies")
         if docs:
