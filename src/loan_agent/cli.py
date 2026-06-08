@@ -10,6 +10,8 @@ import json
 import sys
 from pathlib import Path
 
+from .compliance.audit import AuditLog, subject_ref
+from .compliance.transparency import build_notice
 from .config import load_decision_table, settings
 from .graph import build_graph
 from .llm.factory import get_llm
@@ -40,18 +42,52 @@ def _print_result(result: dict) -> None:
             print(f"   • [{c['source']}] {c.get('dieu') or '?'}: {c['snippet'][:80]}…")
 
 
+def _print_transparency(notice: dict) -> None:
+    print(
+        f"  ⚖ minh bạch (NĐ356): {notice['ket_qua']} — XỬ LÝ TỰ ĐỘNG; "
+        "bạn có quyền yêu cầu nhân viên xét duyệt lại."
+    )
+
+
+def _assess(graph, application: dict, audit: AuditLog) -> dict:
+    """Chạy thẩm định + ghi nhật ký xử lý dữ liệu cá nhân (NĐ356)."""
+    subj = subject_ref(application)
+    audit.record(
+        "processing_started",
+        subject=subj,
+        purpose="tham_dinh_vay",
+        data_categories=sorted(application.keys()),
+    )
+    result = graph.invoke({"application": application, "messages": [], "meta": {}})
+    delib = result.get("deliberation") or {}
+    if settings.llm_provider == "openai" and delib.get("convened") not in (None, "skip"):
+        audit.record(
+            "cross_border_transfer",
+            subject=subj,
+            recipient="OpenAI",
+            data="anonymized",
+            basis="consent+impact_assessment+DPA",
+        )
+    audit.record(
+        "automated_decision",
+        subject=subj,
+        outcome=result.get("decision", {}).get("outcome"),
+    )
+    return result
+
+
 def run_batch(path: str) -> None:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     graph = build_graph(
         get_llm(), get_store(), load_decision_table(), max_turns=settings.max_intake_turns
     )
+    audit = AuditLog(settings.audit_log_path)
     for case in data.get("applications", []):
-        result = graph.invoke(
-            {"application": case["application"], "messages": [], "meta": {}}
-        )
+        result = _assess(graph, case["application"], audit)
         print(f"\n=== {case.get('name', '?')} ===")
         print(f"  kỳ vọng : {case.get('expected_outcome', '-')}")
         _print_result(result)
+        _print_transparency(build_notice(result))
 
 
 # --- Hội thoại offline ---------------------------------------------------
@@ -162,9 +198,10 @@ def run_interactive() -> None:
     graph = build_graph(
         get_llm(), get_store(), load_decision_table(), max_turns=settings.max_intake_turns
     )
-    result = graph.invoke({"application": app, "messages": [], "meta": {}})
+    result = _assess(graph, app, AuditLog(settings.audit_log_path))
     print("=== KẾT QUẢ ===")
     _print_result(result)
+    _print_transparency(build_notice(result))
 
 
 def main() -> None:
