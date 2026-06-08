@@ -1,6 +1,6 @@
 # ADR-0019: Ẩn danh hóa PII trước khi gửi ra dịch vụ ngoài
 
-- **Trạng thái:** Accepted — ⚠️ cần pháp chế quyết đường (I)/(II), xem mục "Cập nhật"
+- **Trạng thái:** Accepted — **Vapp chọn đường (I): OpenAI + tuân thủ cross-border đầy đủ** (2026-06-08). Xem mục "Cập nhật".
 - **Ngày:** 2026-06-07
 - **Liên quan:** ràng buộc lựa chọn [ADR-0006](0006-llm-provider-openai.md); thỏa PR-1, PR-10, NFR-7
 
@@ -66,4 +66,10 @@ Văn bản hiện hành cho thấy **ẩn danh là cần nhưng có thể CHƯA 
   OpenAI chỉ lo phần không-PII. An toàn nhất, phức tạp hơn.
 
 **Ẩn danh (quyết định ở trên) vẫn áp dụng trong cả hai đường** như biện pháp giảm
-thiểu, nhưng không thay thế việc chọn (I)/(II). Quyết định cuối thuộc pháp chế Vapp.
+thiểu, nhưng không thay thế việc chọn (I)/(II).
+
+**→ Quyết định 2026-06-08: Vapp chọn đường (I)** — giữ OpenAI + tuân thủ cross-border
+đầy đủ (đồng ý người dùng + hồ sơ đánh giá tác động + DPA với OpenAI). Kiến trúc LLM
+giữ nguyên. Nghĩa vụ phát sinh phải code/thực hiện: luồng **đồng ý** onboarding,
+**ghi nhật ký xử lý**, **thông báo xử lý tự động + giải thích thuật toán** (NĐ356), quy
+trình **báo sự cố 72h**. Thủ tục nộp Bộ Công an + ký DPA là việc của **pháp chế Vapp**.

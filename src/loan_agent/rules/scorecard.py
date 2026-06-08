@@ -41,6 +41,10 @@ def knock_out(app: LoanApplication, table: dict) -> list[str]:
     if (app.income.monthly or 0) < ko["min_income"]:
         reasons.append("Thu nhập dưới mức tối thiểu")
 
+    max_loan = ko.get("max_loan_amount")
+    if max_loan is not None and (app.loan.amount or 0) > max_loan:
+        reasons.append(f"Khoản vay vượt trần {max_loan:,.0f}đ")
+
     _, dti, _ = _metrics(app, table)
     if dti > ko["dti_abs_max"]:
         reasons.append(f"DTI vượt trần tuyệt đối ({dti:.2f} > {ko['dti_abs_max']})")

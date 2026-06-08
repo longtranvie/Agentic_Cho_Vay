@@ -9,6 +9,8 @@ Mang đi họp. Cập nhật trạng thái khi có câu trả lời.
 
 ## 0. Bốn blocker cần gỡ trước — giải thích cho cuộc họp
 
+> **Cập nhật 2026-06-08:** L1 → chọn **đường (I)** (OpenAI đủ thủ tục); L2 → **fintech**; D1 → có **bản nháp research** ([decision-table-rationale](decision-table-rationale.md), chờ rủi ro Vapp duyệt); D2 → đang bổ sung luật chung.
+
 Bốn việc dưới đây chặn việc lên production. Chia 2 nhóm: **pháp lý** (có thể đổi
 kiến trúc → quyết sớm) và **dữ liệu** (để hệ thống quyết được bằng số thật).
 
@@ -70,8 +72,8 @@ kiến trúc → quyết sớm) và **dữ liệu** (để hệ thống quyết 
 
 | # | Câu hỏi | Vì sao quan trọng | Chủ trì | Mức |
 |---|---|---|---|---|
-| L1 | **PII sang OpenAI: chọn đường (I) tuân thủ cross-border đầy đủ hay (II) giữ PII trong nước (hybrid)?** NĐ 356/2025 (thay NĐ13): cần hồ sơ đánh giá tác động chuyển dữ liệu xuyên biên giới + nộp 60 ngày + đồng ý người dùng + DPA. Ẩn danh là cần nhưng có thể chưa đủ. | Có thể đổi cả lựa chọn LLM/kiến trúc ([ADR-0019](adr/0019-an-danh-pii.md)) | Pháp chế | 🔴 |
-| L2 | **Vapp thuộc loại hình nào** (ngân hàng / công ty tài chính / fintech hợp tác bên cho vay)? | Quyết định chế độ pháp lý: TT39 (chung) hay TT43 (**trần 100tr/khách**) → ảnh hưởng knock-out | Pháp chế | 🔴 |
+| L1 | **PII sang OpenAI: chọn đường (I) tuân thủ cross-border đầy đủ hay (II) giữ PII trong nước (hybrid)?** NĐ 356/2025 (thay NĐ13): cần hồ sơ đánh giá tác động chuyển dữ liệu xuyên biên giới + nộp 60 ngày + đồng ý người dùng + DPA. Ẩn danh là cần nhưng có thể chưa đủ. | Có thể đổi cả lựa chọn LLM/kiến trúc ([ADR-0019](adr/0019-an-danh-pii.md)) | Pháp chế | ✅ **chọn (I)** |
+| L2 | **Vapp thuộc loại hình nào** (ngân hàng / công ty tài chính / fintech hợp tác bên cho vay)? | Quyết định chế độ pháp lý: TT39 (chung) hay TT43 (**trần 100tr/khách**) → ảnh hưởng knock-out | Pháp chế | ✅ **fintech** |
 | L3 | Có cần lấy **sự đồng ý người dùng** cho xử lý/chuyển dữ liệu ngay trong luồng onboarding không? | NĐ 356/2025 Điều 6: đồng ý phải kiểm chứng được, cấm mặc định | Pháp chế | 🟡 |
 | L4 | Trần lãi suất áp dụng cho sản phẩm Vapp (theo Điều 13 TT39 & quy định hiện hành)? | Nạp vào config lãi ([ADR-0015](adr/0015-lai-suat-co-dinh.md)) | Pháp chế + Rủi ro | 🟡 |
 
@@ -79,7 +81,7 @@ kiến trúc → quyết sớm) và **dữ liệu** (để hệ thống quyết 
 
 | # | Câu hỏi | Vì sao quan trọng | Chủ trì | Mức |
 |---|---|---|---|---|
-| D1 | **Ai cấp bộ config quyết định** (bảng điểm, ngưỡng, knock-out, lãi)? Hay dev dùng expert-set tạm? | Nhóm B là **blocker** ([data-requirements §2](data-requirements.md)) | Rủi ro | 🔴 |
+| D1 | **Ai cấp bộ config quyết định** (bảng điểm, ngưỡng, knock-out, lãi)? Hay dev dùng expert-set tạm? | Nhóm B là **blocker** ([data-requirements §2](data-requirements.md)). Dev cấp **bản nháp research** ([decision-table-rationale](decision-table-rationale.md)) — chờ rủi ro duyệt | Rủi ro | 🟡 nháp |
 | D2 | **Tài liệu chính sách nội bộ Vapp** đã có dạng văn bản chưa? Định dạng (PDF/Word)? | Blocker cho RAG (lớp NHNN đã có sẵn) | Sản phẩm/Pháp chế | 🔴 |
 | D3 | **Agent được đọc dữ liệu Vapp nào** (KYC, thu nhập, giao dịch)? | Quyết định Bootstrap + độ tin → ảnh hưởng tỉ lệ Review | Kỹ thuật Vapp | 🟡 |
 | D4 | Ai tạo **bộ eval golden set**? Có chuyên gia rủi ro gán nhãn không? | Đo chất lượng + regression gate (PR-8) | Rủi ro | 🟡 |
@@ -104,5 +106,5 @@ kiến trúc → quyết sớm) và **dữ liệu** (để hệ thống quyết 
 | B4 | **Ngân sách token/độ trễ** chấp nhận được mỗi hồ sơ | Mô hình tranh luận tốn nhiều LLM (PR-4) | Sản phẩm + Kỹ thuật | 🟡 |
 
 ## Tóm tắt blocker (phải gỡ trước khi production)
-- **L1** (đường PII), **L2** (loại hình Vapp), **D1** (config), **D2** (tài liệu chính sách).
+- **L1** ✅ chọn (I) · **L2** ✅ fintech · **D1** 🟡 có bản nháp research (chờ rủi ro duyệt) · **D2** 🟡 đang bổ sung luật chung.
 - Dev/skeleton có thể chạy trước với **expert-set + dữ liệu giả lập** trong khi chờ gỡ blocker.

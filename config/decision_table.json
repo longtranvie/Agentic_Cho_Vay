@@ -1,11 +1,12 @@
 {
-  "_note": "EXPERT-SET MINH HỌA — chờ bộ phận rủi ro Vapp duyệt (open-questions D1). Mọi con số là placeholder.",
-  "version": "expert-0",
+  "_note": "BẢN NHÁP RESEARCH cho fintech vay tiêu dùng (L2=fintech). Số do dev nghiên cứu + neo theo quy định hiện hành (T6/2026), CHƯA được bộ phận rủi ro Vapp duyệt (D1). Trọng số scorecard là phán đoán chuyên gia, PHẢI hiệu chỉnh bằng dữ liệu vay-trả thật (D5). Căn cứ từng số: docs/decision-table-rationale.md.",
+  "version": "fintech-research-1",
   "knockout": {
-    "min_age": 18,
-    "max_age": 70,
-    "min_income": 1,
-    "dti_abs_max": 0.6
+    "min_age": 20,
+    "max_age": 60,
+    "min_income": 4500000,
+    "dti_abs_max": 0.6,
+    "max_loan_amount": 100000000
   },
   "scorecard": {
     "capacity": {
