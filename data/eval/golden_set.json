@@ -1,0 +1,187 @@
+{
+  "_note": "Bộ eval golden set (nhóm E — docs/data-requirements.md). Nhãn 'expected_outcome' do DEV suy luận từ knock-out/chính sách, CHƯA có chuyên gia rủi ro Vapp gán nhãn (open-questions D4). Tầng tin cậy: 'high' = suy chắc từ luật (phải đúng, sai=bug) · 'needs_expert' = ca biên, phán đoán dev (lệch máy → mang hỏi rủi ro) · 'known_gap' = offline mock không bắt được (cần hội đồng LLM hoặc rule bổ sung). Số khớp decision_table.json fintech-research-1.",
+  "cases": [
+    {
+      "id": "ko-underage",
+      "name": "Dưới tuổi tối thiểu",
+      "tier": "high",
+      "expected_outcome": "reject",
+      "basis": "Tuổi 19 < min_age 20 → knock-out",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 20000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 19, "occupation": "nhan vien", "tenure_years": 1},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "ko-overage",
+      "name": "Quá tuổi tối đa",
+      "tier": "high",
+      "expected_outcome": "reject",
+      "basis": "Tuổi 61 > max_age 60 → knock-out",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 20000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 61, "occupation": "huu tri", "tenure_years": 10},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "ko-low-income",
+      "name": "Thu nhập dưới sàn",
+      "tier": "high",
+      "expected_outcome": "reject",
+      "basis": "Thu nhập 4tr < sàn 4.5tr → knock-out",
+      "application": {
+        "loan": {"amount": 5000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 4000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 30, "occupation": "lao dong", "tenure_years": 3},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "ko-over-cap",
+      "name": "Vượt trần khoản vay",
+      "tier": "high",
+      "expected_outcome": "reject",
+      "basis": "Khoản vay 120tr > trần 100tr (TT12/2024) → knock-out",
+      "application": {
+        "loan": {"amount": 120000000, "purpose": "tieu dung", "term_months": 24},
+        "income": {"monthly": 50000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 38, "occupation": "quan ly", "tenure_years": 8},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "ko-high-dti",
+      "name": "DTI vượt trần tuyệt đối",
+      "tier": "high",
+      "expected_outcome": "reject",
+      "basis": "Nợ cũ 5tr/th + khoản mới ~1.83tr trên thu nhập 10tr → DTI ~0.68 > 0.60 → knock-out",
+      "application": {
+        "loan": {"amount": 20000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 10000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 60000000, "monthly_payment": 5000000},
+        "profile": {"age": 35, "occupation": "nhan vien", "tenure_years": 4},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "clean-strong",
+      "name": "Hồ sơ sạch, mạnh",
+      "tier": "high",
+      "expected_outcome": "approve",
+      "basis": "DTI ~0.03, không nợ, không trễ, ổn định, thâm niên 5 → điểm 100 ≥ 70",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "mua xe", "term_months": 12},
+        "income": {"monthly": 30000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 32, "occupation": "ky su", "tenure_years": 5},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "young-clean",
+      "name": "Trẻ, hồ sơ sạch",
+      "tier": "high",
+      "expected_outcome": "approve",
+      "basis": "DTI ~0.06, sạch, ổn định, thâm niên 2 → điểm 93 ≥ 70",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 15000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 25, "occupation": "nhan vien", "tenure_years": 2},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "boundary-age-min",
+      "name": "Đúng tuổi sàn (20)",
+      "tier": "high",
+      "expected_outcome": "approve",
+      "basis": "Tuổi 20 = min_age, KHÔNG bị loại; hồ sơ sạch → điểm 85 ≥ 70",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 20000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 20, "occupation": "nhan vien", "tenure_years": 1},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "boundary-age-max",
+      "name": "Đúng tuổi trần (60)",
+      "tier": "high",
+      "expected_outcome": "approve",
+      "basis": "Tuổi 60 = max_age, KHÔNG bị loại; hồ sơ sạch → điểm 100 ≥ 70",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 25000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 60, "occupation": "quan ly", "tenure_years": 10},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "past-late-payment",
+      "name": "Từng trễ hạn dù năng lực trả tốt",
+      "tier": "needs_expert",
+      "expected_outcome": "review",
+      "basis": "Năng lực trả tốt (DTI ~0.11) nhưng có lịch sử trễ hạn → kỳ vọng xét tay. Cần rủi ro xác nhận trễ→review hay →reject.",
+      "application": {
+        "loan": {"amount": 15000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 12000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 35, "occupation": "nhan vien", "tenure_years": 2},
+        "credit_history": {"had_late_payment": true}
+      }
+    },
+    {
+      "id": "unstable-income",
+      "name": "Thu nhập không ổn định",
+      "tier": "needs_expert",
+      "expected_outcome": "review",
+      "basis": "Thu nhập không ổn định → kỳ vọng soi kỹ (review). LƯU Ý: trọng số hiện tại có thể vẫn cho điểm cao → nếu máy ra approve thì đây là điểm mang hỏi rủi ro (D5).",
+      "application": {
+        "loan": {"amount": 20000000, "purpose": "kinh doanh", "term_months": 12},
+        "income": {"monthly": 10000000, "source": "kinh_doanh", "stability": "khong_on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 40, "occupation": "buon ban", "tenure_years": 4},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "elevated-dti",
+      "name": "DTI cao, sát ngưỡng",
+      "tier": "needs_expert",
+      "expected_outcome": "review",
+      "basis": "DTI ~0.46 (cao nhưng dưới trần 0.60), điểm ~68 sát ngưỡng 70 → xét tay. Sát ngưỡng nên dễ lật nếu đổi trọng số.",
+      "application": {
+        "loan": {"amount": 40000000, "purpose": "kinh doanh", "term_months": 18},
+        "income": {"monthly": 12000000, "source": "kinh_doanh", "stability": "on_dinh"},
+        "debt": {"total": 50000000, "monthly_payment": 3000000},
+        "profile": {"age": 45, "occupation": "buon ban", "tenure_years": 2},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "purpose-gold-bar",
+      "name": "Mục đích bị cấm (mua vàng miếng)",
+      "tier": "known_gap",
+      "expected_outcome": "reject",
+      "basis": "Mua vàng miếng bị cấm (Điều 8 TT hợp nhất). GIỚI HẠN: offline mock không raise cờ regulatory_concern nên KHÔNG bắt được → cần hội đồng LLM thật HOẶC bổ sung chặn mục đích tất định.",
+      "application": {
+        "loan": {"amount": 30000000, "purpose": "mua vang mieng", "term_months": 12},
+        "income": {"monthly": 30000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 35, "occupation": "ky su", "tenure_years": 5},
+        "credit_history": {"had_late_payment": false}
+      }
+    }
+  ]
+}
