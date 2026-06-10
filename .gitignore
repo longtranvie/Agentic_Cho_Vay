@@ -158,6 +158,9 @@ corp-ca-bundle.pem
 sessions.db
 *.db-journal
 
+# Bộ eval giả lập — phái sinh từ eval/generate_synthetic.py (tái tạo được, không commit)
+data/eval/synthetic_set.json
+
 # Environments
 .env
 .envrc
