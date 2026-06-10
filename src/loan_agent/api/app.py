@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
 from ..compliance.audit import AuditLog
@@ -27,6 +27,15 @@ from .sessions import SessionStore
 app = FastAPI(title="Loan Agent API (skeleton)", version="0.1.0")
 
 _runtime: dict = {}
+
+
+def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
+    """Chặn truy cập khi đã cấu hình LOAN_API_KEY. Rỗng = tắt auth (dev/test/offline).
+
+    Production BẮT BUỘC đặt LOAN_API_KEY. /health để mở (load balancer cần thăm dò).
+    """
+    if settings.api_key and x_api_key != settings.api_key:
+        raise HTTPException(status_code=401, detail="Thiếu hoặc sai API key (header X-API-Key).")
 
 
 def _audit() -> AuditLog:
@@ -67,7 +76,7 @@ def _completed_response(result: dict) -> dict:
     }
 
 
-@app.post("/assess")
+@app.post("/assess", dependencies=[Depends(require_api_key)])
 def assess(application: LoanApplication) -> dict:
     """Thẩm định 1 hồ sơ ĐỦ field một phát. Thiếu field core → trả danh sách thiếu.
 
@@ -131,7 +140,7 @@ def _consent_ok(sess: dict) -> bool:
     return bool(c and c.get("agreed"))
 
 
-@app.post("/sessions")
+@app.post("/sessions", dependencies=[Depends(require_api_key)])
 def start_session() -> dict:
     """Mở phiên mới. CHƯA thu thập dữ liệu — trả bản đồng ý để khách xác nhận trước."""
     sid = _session_store().create()
@@ -142,7 +151,7 @@ def start_session() -> dict:
     }
 
 
-@app.post("/sessions/{session_id}/consent")
+@app.post("/sessions/{session_id}/consent", dependencies=[Depends(require_api_key)])
 def session_consent(session_id: str, decision: ConsentDecision) -> dict:
     """Ghi nhận đồng ý/từ chối xử lý dữ liệu (NĐ356 Đ.6) TRƯỚC khi hỏi field nào.
 
@@ -184,7 +193,7 @@ def session_consent(session_id: str, decision: ConsentDecision) -> dict:
     }
 
 
-@app.post("/sessions/{session_id}/message")
+@app.post("/sessions/{session_id}/message", dependencies=[Depends(require_api_key)])
 def session_message(session_id: str, patch: LoanApplication) -> dict:
     """Gửi thêm thông tin cho phiên → merge vào hồ sơ dở, hỏi tiếp hoặc ra quyết định.
 
@@ -232,7 +241,7 @@ def session_message(session_id: str, patch: LoanApplication) -> dict:
     return {"session_id": session_id, **_completed_response(result)}
 
 
-@app.get("/sessions/{session_id}")
+@app.get("/sessions/{session_id}", dependencies=[Depends(require_api_key)])
 def get_session(session_id: str) -> dict:
     """Xem lại phiên (nối phiên: thoát ra rồi vào lại vẫn còn hồ sơ dở)."""
     store = _session_store()

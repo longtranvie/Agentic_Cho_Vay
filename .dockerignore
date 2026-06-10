@@ -1,0 +1,26 @@
+# KHÔNG nướng bí mật / dữ liệu vận hành / file thừa vào image.
+.git
+.gitignore
+
+# Bí mật & cấu hình máy-cụ-thể
+.env
+.env.*
+!.env.example
+*.pem
+
+# Dữ liệu vận hành (PII / nhật ký)
+*.db
+*.db-journal
+*.jsonl
+
+# Không cần lúc chạy
+tests/
+docs/
+eval/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

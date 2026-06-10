@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     # Hội thoại intake (ADR-0003)
     max_intake_turns: int = 12
 
+    # Auth API: đặt khóa = BẬT xác thực (header X-API-Key). Rỗng = tắt (chỉ dev).
+    api_key: str = ""
+
     # CA bundle tùy chỉnh (chạy sau proxy MITM/doanh nghiệp). Rỗng = dùng mặc định.
     ca_bundle: str = ""
 
