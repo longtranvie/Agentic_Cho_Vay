@@ -154,6 +154,10 @@ corp-ca-bundle.pem
 # Nhật ký xử lý dữ liệu (NĐ356) — dữ liệu vận hành, không commit
 *.jsonl
 
+# Phiên hội thoại intake (chứa hồ-sơ-dở) — dữ liệu vận hành, không commit
+sessions.db
+*.db-journal
+
 # Environments
 .env
 .envrc

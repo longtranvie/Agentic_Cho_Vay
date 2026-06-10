@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     decision_table: str = str(DEFAULT_DECISION_TABLE)
     policy_dir: str = str(PROJECT_ROOT / "data" / "policies")
     audit_log_path: str = str(PROJECT_ROOT / "audit-log.jsonl")
+    session_db_path: str = str(PROJECT_ROOT / "sessions.db")
 
     # Hội thoại intake (ADR-0003)
     max_intake_turns: int = 12
