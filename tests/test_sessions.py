@@ -34,6 +34,7 @@ def test_session_store_roundtrip():
 
 def test_multi_turn_fills_then_decides():
     sid = client.post("/sessions").json()["session_id"]
+    client.post(f"/sessions/{sid}/consent", json={"agreed": True})  # đồng ý trước
 
     # Lượt 1: chỉ khai phần loan → vẫn thiếu, được hỏi tiếp.
     r = client.post(
@@ -63,6 +64,7 @@ def test_multi_turn_fills_then_decides():
 
 def test_session_persists_partial_state():
     sid = client.post("/sessions").json()["session_id"]
+    client.post(f"/sessions/{sid}/consent", json={"agreed": True})  # đồng ý trước
     client.post(f"/sessions/{sid}/message", json={"profile": {"age": 40}})
     r = client.get(f"/sessions/{sid}")
     body = r.json()

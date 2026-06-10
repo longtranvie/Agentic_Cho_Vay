@@ -25,10 +25,16 @@ class SessionStore:
                 id TEXT PRIMARY KEY,
                 application TEXT NOT NULL,
                 messages TEXT NOT NULL,
+                consent TEXT,
                 created_at REAL NOT NULL,
                 updated_at REAL NOT NULL
             )"""
         )
+        # Migration cho db cũ chưa có cột consent (lỗi 'duplicate column' = đã có → bỏ qua).
+        try:
+            self._exec("ALTER TABLE sessions ADD COLUMN consent TEXT")
+        except sqlite3.OperationalError:
+            pass
 
     def _exec(self, sql: str, params: tuple = (), fetch: bool = False):
         conn = sqlite3.connect(self._db)
@@ -52,7 +58,8 @@ class SessionStore:
 
     def get(self, sid: str) -> dict | None:
         row = self._exec(
-            "SELECT application, messages, created_at, updated_at FROM sessions WHERE id=?",
+            "SELECT application, messages, consent, created_at, updated_at"
+            " FROM sessions WHERE id=?",
             (sid,),
             fetch=True,
         )
@@ -62,8 +69,9 @@ class SessionStore:
             "id": sid,
             "application": json.loads(row[0]),
             "messages": json.loads(row[1]),
-            "created_at": row[2],
-            "updated_at": row[3],
+            "consent": json.loads(row[2]) if row[2] else None,
+            "created_at": row[3],
+            "updated_at": row[4],
         }
 
     def save(self, sid: str, application: dict, messages: list) -> None:
@@ -75,6 +83,13 @@ class SessionStore:
                 time.time(),
                 sid,
             ),
+        )
+
+    def set_consent(self, sid: str, consent: dict) -> None:
+        """Lưu quyết định đồng ý/từ chối (kiểm chứng được: agreed + version + thời điểm)."""
+        self._exec(
+            "UPDATE sessions SET consent=?, updated_at=? WHERE id=?",
+            (json.dumps(consent, ensure_ascii=False), time.time(), sid),
         )
 
     def purge_expired(self, ttl_seconds: float) -> int:

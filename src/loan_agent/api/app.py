@@ -8,9 +8,13 @@ Tài liệu tự sinh tại /docs.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 from ..compliance.audit import AuditLog
+from ..compliance.consent import build_consent_notice
 from ..compliance.transparency import build_notice
 from ..config import load_decision_table, settings
 from ..graph import build_graph
@@ -25,8 +29,14 @@ app = FastAPI(title="Loan Agent API (skeleton)", version="0.1.0")
 _runtime: dict = {}
 
 
+def _audit() -> AuditLog:
+    if "audit" not in _runtime:
+        _runtime["audit"] = AuditLog(settings.audit_log_path)
+    return _runtime["audit"]
+
+
 def _engine():
-    """Khởi tạo graph + audit LƯỜI (tránh gọi mạng/embedding lúc import module)."""
+    """Khởi tạo graph LƯỜI (tránh gọi mạng/embedding lúc import module)."""
     if "graph" not in _runtime:
         _runtime["graph"] = build_graph(
             get_llm(),
@@ -34,8 +44,7 @@ def _engine():
             load_decision_table(),
             max_turns=settings.max_intake_turns,
         )
-        _runtime["audit"] = AuditLog(settings.audit_log_path)
-    return _runtime["graph"], _runtime["audit"]
+    return _runtime["graph"], _audit()
 
 
 @app.get("/health")
@@ -113,14 +122,63 @@ def _session_store() -> SessionStore:
     return _runtime["sessions"]
 
 
+class ConsentDecision(BaseModel):
+    agreed: bool
+
+
+def _consent_ok(sess: dict) -> bool:
+    c = sess.get("consent")
+    return bool(c and c.get("agreed"))
+
+
 @app.post("/sessions")
 def start_session() -> dict:
-    """Mở phiên intake mới. Trả session_id + field còn thiếu + câu hỏi đầu tiên."""
+    """Mở phiên mới. CHƯA thu thập dữ liệu — trả bản đồng ý để khách xác nhận trước."""
     sid = _session_store().create()
-    missing = LoanApplication().missing_required_fields()
     return {
         "session_id": sid,
+        "status": "consent_required",
+        "consent_notice": build_consent_notice(),
+    }
+
+
+@app.post("/sessions/{session_id}/consent")
+def session_consent(session_id: str, decision: ConsentDecision) -> dict:
+    """Ghi nhận đồng ý/từ chối xử lý dữ liệu (NĐ356 Đ.6) TRƯỚC khi hỏi field nào.
+
+    Đồng ý → mở khóa intake + audit `consent_given`. Từ chối → phiên khóa, không xử lý.
+    """
+    store = _session_store()
+    sess = store.get(session_id)
+    if sess is None:
+        raise HTTPException(status_code=404, detail="session không tồn tại")
+
+    notice = build_consent_notice()
+    store.set_consent(
+        session_id,
+        {
+            "agreed": decision.agreed,
+            "version": notice["version"],
+            "at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    _audit().record(
+        "consent_given" if decision.agreed else "consent_declined",
+        subject=f"sess_{session_id}",
+        consent_version=notice["version"],
+        agreed=decision.agreed,
+    )
+    if not decision.agreed:
+        return {
+            "session_id": session_id,
+            "status": "consent_declined",
+            "thong_bao": "Bạn đã từ chối. Hệ thống sẽ không xử lý hồ sơ của bạn.",
+        }
+    missing = LoanApplication().missing_required_fields()
+    return {
+        "session_id": session_id,
         "status": "incomplete",
+        "consent_recorded": True,
         "missing_required_fields": missing,
         "next_question": _next_question(missing),
     }
@@ -137,6 +195,11 @@ def session_message(session_id: str, patch: LoanApplication) -> dict:
     sess = store.get(session_id)
     if sess is None:
         raise HTTPException(status_code=404, detail="session không tồn tại")
+    if not _consent_ok(sess):
+        raise HTTPException(
+            status_code=403,
+            detail="Cần đồng ý xử lý dữ liệu trước (POST /sessions/{id}/consent).",
+        )
 
     provided = patch.model_dump(mode="json", exclude_none=True)
     merged = _merge_app(sess["application"], provided)
@@ -165,7 +228,7 @@ def session_message(session_id: str, patch: LoanApplication) -> dict:
 
     store.save(session_id, merged, messages)
     graph, audit = _engine()
-    result = run_assessment(graph, merged, audit)
+    result = run_assessment(graph, merged, audit, consent=True)
     return {"session_id": session_id, **_completed_response(result)}
 
 
@@ -177,9 +240,14 @@ def get_session(session_id: str) -> dict:
     if sess is None:
         raise HTTPException(status_code=404, detail="session không tồn tại")
     missing = LoanApplication.model_validate(sess["application"]).missing_required_fields()
+    if not _consent_ok(sess):
+        status = "consent_required"
+    else:
+        status = "ready" if not missing else "incomplete"
     return {
         "session_id": session_id,
-        "status": "ready" if not missing else "incomplete",
+        "status": status,
+        "consent": sess.get("consent"),
         "application": sess["application"],
         "messages": sess["messages"],
         "missing_required_fields": missing,
