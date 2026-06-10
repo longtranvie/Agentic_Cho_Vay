@@ -6,12 +6,21 @@ năng trả) + willingness (thiện chí trả).
 
 from __future__ import annotations
 
+import unicodedata
+
 from ..schemas import LoanApplication, RiskResult
 from ..tools.financial import (
     debt_to_income,
     loan_to_annual_income,
     monthly_payment,
 )
+
+
+def _normalize(text: str) -> str:
+    """Bỏ dấu + thường hóa để khớp mục đích bất kể có/không dấu ('vàng miếng'≈'vang mieng')."""
+    text = text.lower().replace("đ", "d")
+    nfd = unicodedata.normalize("NFD", text)
+    return "".join(c for c in nfd if not unicodedata.combining(c))
 
 
 def _lookup_band(value: float, bands: list[list]) -> int:
@@ -44,6 +53,12 @@ def knock_out(app: LoanApplication, table: dict) -> list[str]:
     max_loan = ko.get("max_loan_amount")
     if max_loan is not None and (app.loan.amount or 0) > max_loan:
         reasons.append(f"Khoản vay vượt trần {max_loan:,.0f}đ")
+
+    purpose = _normalize(app.loan.purpose or "")
+    for term in ko.get("forbidden_purposes", []):
+        if _normalize(term) in purpose:
+            reasons.append(f"Mục đích vay bị cấm theo Điều 8 ('{term}')")
+            break
 
     _, dti, _ = _metrics(app, table)
     if dti > ko["dti_abs_max"]:

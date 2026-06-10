@@ -6,7 +6,8 @@
     "max_age": 60,
     "min_income": 4500000,
     "dti_abs_max": 0.6,
-    "max_loan_amount": 100000000
+    "max_loan_amount": 100000000,
+    "forbidden_purposes": ["vàng miếng", "đảo nợ", "gửi tiền"]
   },
   "scorecard": {
     "capacity": {

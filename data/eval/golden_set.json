@@ -172,14 +172,28 @@
     {
       "id": "purpose-gold-bar",
       "name": "Mục đích bị cấm (mua vàng miếng)",
-      "tier": "known_gap",
+      "tier": "high",
       "expected_outcome": "reject",
-      "basis": "Mua vàng miếng bị cấm (Điều 8 TT hợp nhất). GIỚI HẠN: offline mock không raise cờ regulatory_concern nên KHÔNG bắt được → cần hội đồng LLM thật HOẶC bổ sung chặn mục đích tất định.",
+      "basis": "Mua vàng miếng bị cấm (Điều 8 TT hợp nhất). Nay BẮT ĐƯỢC offline nhờ chặn mục đích cấm tất định trong knock-out (knockout.forbidden_purposes) → reject, không cần LLM.",
       "application": {
         "loan": {"amount": 30000000, "purpose": "mua vang mieng", "term_months": 12},
         "income": {"monthly": 30000000, "source": "luong", "stability": "on_dinh"},
         "debt": {"total": 0, "monthly_payment": 0},
         "profile": {"age": 35, "occupation": "ky su", "tenure_years": 5},
+        "credit_history": {"had_late_payment": false}
+      }
+    },
+    {
+      "id": "data-inconsistency-tenure",
+      "name": "Dữ liệu mâu thuẫn (thâm niên > tuổi đi làm khả dĩ)",
+      "tier": "known_gap",
+      "expected_outcome": "review",
+      "basis": "Tuổi 22 nhưng thâm niên 15 năm → bắt đầu đi làm lúc 7 tuổi (bất khả). Kỳ vọng hội đồng nêu cờ data_inconsistency → review. GIỚI HẠN: offline tất định không bắt được mâu thuẫn logic này (cần hội đồng LLM thật).",
+      "application": {
+        "loan": {"amount": 10000000, "purpose": "tieu dung", "term_months": 12},
+        "income": {"monthly": 20000000, "source": "luong", "stability": "on_dinh"},
+        "debt": {"total": 0, "monthly_payment": 0},
+        "profile": {"age": 22, "occupation": "ky su", "tenure_years": 15},
         "credit_history": {"had_late_payment": false}
       }
     }

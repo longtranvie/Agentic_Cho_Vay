@@ -15,6 +15,7 @@
 | `min_income` | **4.500.000đ/tháng** | ≈ **lương tối thiểu vùng 2026** (NĐ 293/2025: Vùng III 4,14tr · Vùng II 4,73tr). Sàn để có khả năng trả nợ tối thiểu. |
 | `dti_abs_max` | **0.60** | Tổng nghĩa vụ trả nợ (cũ + mới) ≤ 60% thu nhập. Thông lệ an toàn quốc tế 50–60%; trên ngưỡng này rủi ro vỡ nợ tăng mạnh. |
 | `max_loan_amount` | **100.000.000đ** | Trần **"khoản vay có giá trị nhỏ"** — TT 12/2024 dẫn chiếu Điều 102.2 Luật Các TCTD 2024. Phù hợp fintech vay tiêu dùng (L2). |
+| `forbidden_purposes` | **vàng miếng · đảo nợ · gửi tiền** | Mục đích **bị cấm cho vay** — **Điều 8** TT hợp nhất. Khớp mờ (bỏ dấu) trên `loan.purpose`. Danh sách cần pháp chế Vapp rà & mở rộng (khớp từ khóa dễ sót/nhầm — kết hợp hội đồng LLM cho ca tinh vi). |
 
 ## 2. Scorecard (chấm điểm 0–100)
 

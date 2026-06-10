@@ -53,3 +53,10 @@ def test_high_dti_knocked_out():
         make_app(**{"loan.amount": 500_000_000, "loan.term_months": 6}), TABLE
     )
     assert r.knocked_out is True
+
+
+def test_knockout_forbidden_purpose():
+    # mục đích bị cấm (Điều 8) — không dấu vẫn khớp config có dấu ("vàng miếng")
+    r = compute_risk(make_app(**{"loan.purpose": "mua vang mieng"}), TABLE)
+    assert r.knocked_out is True
+    assert any("cấm" in reason for reason in r.knockout_reasons)

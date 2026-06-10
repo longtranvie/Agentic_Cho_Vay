@@ -20,7 +20,7 @@ hồi quy (regression) khi đổi bộ số.
 > **D4**). Tầng `high` đủ chắc để làm regression gate; tầng `needs_expert` là **đầu vào
 > thảo luận** với risk, không phải chân lý.
 
-## Kết quả hiện tại: 9/9 high · 11/13 tổng
+## Kết quả hiện tại: 10/10 high · 12/14 tổng
 
 Hai ca lệch là **phát hiện có chủ đích**, không phải lỗi:
 
@@ -28,11 +28,14 @@ Hai ca lệch là **phát hiện có chủ đích**, không phải lỗi:
    không kéo điểm xuống dưới 70 với trọng số hiện tại (clean + thâm niên lấn át). → Câu hỏi
    cho rủi ro: *thu nhập không ổn định có nên buộc xét tay không?* Liên quan hiệu chỉnh
    trọng số bằng dữ liệu thật (**D5**).
-2. **`purpose-gold-bar` — máy `approve`, kỳ vọng `reject`.** Mua vàng miếng bị cấm (Điều 8
-   TT hợp nhất) nhưng offline mock không raise cờ `regulatory_concern`. → Cần **hội đồng LLM
-   thật** bắt, HOẶC thêm **chặn mục đích tất định** (danh sách mục đích cấm trong knock-out).
+2. **`data-inconsistency-tenure` — máy `approve`, kỳ vọng `review`.** Tuổi 22 nhưng thâm niên
+   15 năm (bắt đầu làm lúc 7 tuổi — bất khả). Mâu thuẫn logic này cần **hội đồng LLM** nêu cờ
+   `data_inconsistency`; offline tất định không suy luận được → giới hạn đã biết.
+
+> ✅ Ca `purpose-gold-bar` (mua vàng miếng) trước là `known_gap`, nay **bịt được offline** bằng
+> chặn mục đích cấm tất định (`knockout.forbidden_purposes`, Điều 8) → đã nâng lên tầng `high`.
 
 ## Việc còn lại (khi có nguồn lực Vapp)
 - Chuyên gia rủi ro gán/duyệt nhãn → nâng `needs_expert` thành chân lý (D4).
 - Bổ sung ca từ hồ sơ thật đã review.
-- Cân nhắc chặn mục đích tất định để bịt `known_gap` mà không phụ thuộc LLM.
+- Mở rộng `forbidden_purposes` (khớp mờ theo từ khóa) — danh sách cần pháp chế Vapp rà & duyệt.
