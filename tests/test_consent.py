@@ -64,3 +64,42 @@ def test_consent_given_recorded_in_audit():
     with open(_AUDIT, encoding="utf-8") as f:
         events = [json.loads(line)["event"] for line in f]
     assert "consent_given" in events
+
+
+def test_withdraw_blocks_message_again():
+    sid = _start()
+    client.post(f"/sessions/{sid}/consent", json={"agreed": True})
+    assert client.post(f"/sessions/{sid}/message", json={"profile": {"age": 30}}).status_code == 200
+    c = client.post(f"/sessions/{sid}/withdraw").json()
+    assert c["status"] == "consent_withdrawn"
+    # Sau khi rút lại → /message bị chặn như chưa đồng ý.
+    assert client.post(f"/sessions/{sid}/message", json={"profile": {"age": 31}}).status_code == 403
+
+
+def test_withdraw_recorded_in_audit():
+    if os.path.exists(_AUDIT):
+        os.remove(_AUDIT)
+    api_module._runtime["audit"] = AuditLog(_AUDIT)
+    sid = _start()
+    client.post(f"/sessions/{sid}/consent", json={"agreed": True})
+    client.post(f"/sessions/{sid}/withdraw")
+    with open(_AUDIT, encoding="utf-8") as f:
+        events = [json.loads(line)["event"] for line in f]
+    assert "consent_withdrawn" in events
+
+
+def test_review_request_recorded_in_audit():
+    if os.path.exists(_AUDIT):
+        os.remove(_AUDIT)
+    api_module._runtime["audit"] = AuditLog(_AUDIT)
+    sid = _start()
+    client.post(f"/sessions/{sid}/consent", json={"agreed": True})
+    r = client.post(f"/sessions/{sid}/review-request").json()
+    assert r["status"] == "human_review_requested"
+    with open(_AUDIT, encoding="utf-8") as f:
+        events = [json.loads(line)["event"] for line in f]
+    assert "human_review_requested" in events
+
+
+def test_review_request_unknown_session_404():
+    assert client.post("/sessions/khong-co/review-request").status_code == 404

@@ -193,6 +193,53 @@ def session_consent(session_id: str, decision: ConsentDecision) -> dict:
     }
 
 
+@app.post("/sessions/{session_id}/withdraw", dependencies=[Depends(require_api_key)])
+def session_withdraw(session_id: str) -> dict:
+    """Khách rút lại đồng ý (NĐ356 Đ.6) → khóa lại xử lý. KHÔNG hồi tố phần đã xử lý."""
+    store = _session_store()
+    sess = store.get(session_id)
+    if sess is None:
+        raise HTTPException(status_code=404, detail="session không tồn tại")
+    store.set_consent(
+        session_id,
+        {
+            "agreed": False,
+            "version": build_consent_notice()["version"],
+            "withdrawn_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    _audit().record("consent_withdrawn", subject=f"sess_{session_id}")
+    return {
+        "session_id": session_id,
+        "status": "consent_withdrawn",
+        "thong_bao": "Đã rút lại đồng ý. Hệ thống dừng xử lý (không hồi tố phần đã xử lý).",
+    }
+
+
+@app.post("/sessions/{session_id}/review-request", dependencies=[Depends(require_api_key)])
+def session_review_request(session_id: str) -> dict:
+    """Khách yêu cầu nhân viên xét duyệt lại quyết định tự động (quyền ở transparency notice).
+
+    Ghi nhận yêu cầu (audit + nhật ký phiên). Định tuyến tới hàng đợi xét duyệt của nhân
+    viên là việc vận hành Vapp (open-questions T3) — ngoài phạm vi code hiện tại.
+    """
+    store = _session_store()
+    sess = store.get(session_id)
+    if sess is None:
+        raise HTTPException(status_code=404, detail="session không tồn tại")
+    messages = sess["messages"]
+    messages.append(
+        {"role": "system", "content": "Khách yêu cầu nhân viên xét duyệt lại quyết định."}
+    )
+    store.save(session_id, sess["application"], messages)
+    _audit().record("human_review_requested", subject=f"sess_{session_id}")
+    return {
+        "session_id": session_id,
+        "status": "human_review_requested",
+        "thong_bao": "Đã ghi nhận yêu cầu xét duyệt thủ công. Nhân viên sẽ xem lại hồ sơ của bạn.",
+    }
+
+
 @app.post("/sessions/{session_id}/message", dependencies=[Depends(require_api_key)])
 def session_message(session_id: str, patch: LoanApplication) -> dict:
     """Gửi thêm thông tin cho phiên → merge vào hồ sơ dở, hỏi tiếp hoặc ra quyết định.
