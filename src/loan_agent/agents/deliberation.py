@@ -110,10 +110,15 @@ def run_deliberation(
         f"Bạn là Judge tổng hợp HỘI ĐỒNG THẨM ĐỊNH KHOẢN VAY.\n"
         f"Hồ sơ: {brief}\n"
         f"Toàn bộ tranh luận của hội đồng:\n{_format_transcript(transcript)}\n"
-        f"TỔNG HỢP các lập luận trên thành khuyến nghị (recommendation: lean_approve / "
-        f"lean_review / lean_reject). CHỈ nêu cờ rủi ro (blocking_flags) NẾU thực sự có vấn "
-        f"đề, và phải chọn TRONG danh sách: [{allowed}]. TUYỆT ĐỐI không tạo cờ ngoài danh "
-        f"sách; không có thì để rỗng."
+        f"Đánh giá ĐỘC LẬP, KHÔNG tự động theo bên gay gắt nhất. Đưa khuyến nghị "
+        f"(recommendation: lean_approve / lean_review / lean_reject) PHẢN ÁNH ĐÚNG mức rủi ro: "
+        f"hồ sơ điểm cao, sạch, đúng chính sách → lean_approve.\n"
+        f"QUY TẮC GẮN CỜ (blocking_flags) — chọn TRONG [{allowed}]:\n"
+        f"- CHỈ gắn khi có BẰNG CHỨNG CỤ THỂ trong hồ sơ/chính sách, KHÔNG vì thận trọng chung chung.\n"
+        f"- 'affordability_borderline' chỉ khi DTI thực sự sát/vượt ngưỡng; 'regulatory_concern' "
+        f"chỉ khi vi phạm điều luật rõ ràng.\n"
+        f"- Hồ sơ điểm cao + sạch + đúng chính sách → ĐỂ RỖNG cờ.\n"
+        f"- TUYỆT ĐỐI không tạo cờ ngoài danh sách; không chắc thì để rỗng."
     )
     verdict = llm.structured(verdict_prompt, JudgeVerdict)
     # Lọc cờ: chỉ giữ cờ thuộc bảng cấu hình (LLM thật có thể bịa cờ ngoài danh sách).
