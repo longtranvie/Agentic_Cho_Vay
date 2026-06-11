@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vapp — Trợ lý thẩm định vay (DEMO)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background:#eef1f6; color:#1c2430; }
+  .wrap { max-width:640px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; background:#fff; }
+  header { background:#0d6efd; color:#fff; padding:16px 20px; }
+  header h1 { margin:0; font-size:18px; }
+  header .sub { font-size:12px; opacity:.85; margin-top:2px; }
+  .banner { background:#fff3cd; color:#664d03; font-size:12px; padding:8px 20px; border-bottom:1px solid #ffe69c; }
+  #chat { flex:1; padding:18px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
+  .msg { max-width:80%; padding:10px 14px; border-radius:14px; line-height:1.4; font-size:14px; white-space:pre-wrap; }
+  .bot { background:#f0f2f5; align-self:flex-start; border-bottom-left-radius:4px; }
+  .user { background:#0d6efd; color:#fff; align-self:flex-end; border-bottom-right-radius:4px; }
+  .card { align-self:stretch; max-width:100%; border:1px solid #e3e8ef; border-radius:12px; padding:14px; background:#fff; }
+  .card.approve { border-left:5px solid #198754; }
+  .card.reject  { border-left:5px solid #dc3545; }
+  .card.review  { border-left:5px solid #fd7e14; }
+  .card h3 { margin:0 0 8px; font-size:16px; }
+  .card .meta { font-size:13px; color:#475467; }
+  .card ul { margin:8px 0 0; padding-left:18px; font-size:13px; }
+  .cite { font-size:12px; color:#475467; background:#f8fafc; border-radius:8px; padding:6px 10px; margin-top:4px; }
+  #bar { padding:12px 18px; border-top:1px solid #e3e8ef; display:flex; gap:8px; }
+  #bar input, #bar select { flex:1; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; }
+  button { padding:10px 16px; border:0; border-radius:10px; background:#0d6efd; color:#fff; font-size:14px; cursor:pointer; }
+  button.ghost { background:#e7eefc; color:#0d6efd; }
+  button:disabled { opacity:.5; cursor:default; }
+  .btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🏦 Vapp — Trợ lý thẩm định khoản vay</h1>
+    <div class="sub">Demo POC · vay tiêu dùng tín chấp</div>
+  </header>
+  <div class="banner">⚠️ BẢN DEMO — chạy chế độ giả lập (mock), KHÔNG phải quyết định cho vay thật.</div>
+  <div id="chat"></div>
+  <div id="bar"></div>
+</div>
+
+<script>
+const FIELDS = {
+  'loan.amount':       {q:'Bạn muốn vay số tiền bao nhiêu?', type:'money', ph:'vd: 20tr hoặc 20000000'},
+  'loan.purpose':      {q:'Bạn vay để làm gì?', type:'text', ph:'vd: mua xe'},
+  'loan.term_months':  {q:'Bạn muốn vay trong bao nhiêu tháng?', type:'number', ph:'vd: 12'},
+  'income.monthly':    {q:'Thu nhập mỗi tháng của bạn khoảng bao nhiêu?', type:'money', ph:'vd: 30tr'},
+  'income.source':     {q:'Nguồn thu nhập của bạn?', type:'select', opts:[['luong','Lương'],['kinh_doanh','Kinh doanh'],['khac','Khác']]},
+  'income.stability':  {q:'Thu nhập của bạn có ổn định không?', type:'select', opts:[['on_dinh','Ổn định'],['khong_on_dinh','Không ổn định']]},
+  'debt.total':        {q:'Tổng dư nợ hiện tại của bạn?', type:'money', ph:'0 nếu không có'},
+  'debt.monthly_payment':{q:'Mỗi tháng bạn đang trả nợ bao nhiêu?', type:'money', ph:'0 nếu không có'},
+  'profile.age':       {q:'Bạn bao nhiêu tuổi?', type:'number', ph:'vd: 30'},
+  'profile.occupation':{q:'Nghề nghiệp của bạn là gì?', type:'text', ph:'vd: kỹ sư'},
+  'profile.tenure_years':{q:'Bạn làm công việc hiện tại được mấy năm?', type:'number', ph:'vd: 3'},
+  'credit_history.had_late_payment':{q:'Bạn từng trả nợ trễ hạn chưa?', type:'select', opts:[['false','Chưa bao giờ'],['true','Đã từng']]},
+};
+
+const chat = document.getElementById('chat');
+const bar = document.getElementById('bar');
+let sessionId = null;
+
+function bubble(text, who){ const d=document.createElement('div'); d.className='msg '+who; d.textContent=text; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; return d; }
+function clearBar(){ bar.innerHTML=''; }
+function money(raw){ let s=(''+raw).toLowerCase().replace(/[,\s.]/g,''); let m=1; if(/tr|trieu|m/.test(s)){m=1e6; s=s.replace(/tr.*|trieu.*|m.*/,'');} const n=parseFloat(s.replace(/[^\d]/g,'')); return isNaN(n)?0:n*m; }
+
+async function api(path, body){
+  const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body: body?JSON.stringify(body):undefined});
+  return r.json();
+}
+
+async function start(){
+  chat.innerHTML=''; clearBar();
+  bubble('Xin chào! Mình là trợ lý thẩm định khoản vay của Vapp. Mình sẽ hỏi bạn vài thông tin nhé.', 'bot');
+  const s = await api('/sessions');
+  sessionId = s.session_id;
+  const n = s.consent_notice;
+  bubble('Trước tiên, để xử lý hồ sơ mình cần bạn đồng ý:\n\n• ' + n.muc_dich.join('\n• ') + '\n\nBạn có quyền: ' + n.quyen_cua_ban[0], 'bot');
+  clearBar();
+  const yes=document.createElement('button'); yes.textContent='✓ Đồng ý';
+  const no=document.createElement('button'); no.textContent='✕ Từ chối'; no.className='ghost';
+  yes.onclick=()=>consent(true); no.onclick=()=>consent(false);
+  bar.append(yes,no);
+}
+
+async function consent(agreed){
+  bubble(agreed?'✓ Tôi đồng ý':'✕ Tôi từ chối','user');
+  const r = await api('/sessions/'+sessionId+'/consent', {agreed});
+  if(!agreed){ bubble('Đã ghi nhận. Hệ thống sẽ không xử lý hồ sơ của bạn.','bot'); clearBar();
+    const b=document.createElement('button'); b.textContent='Bắt đầu lại'; b.onclick=start; bar.append(b); return; }
+  step(r);
+}
+
+function step(r){
+  if(r.status==='completed'){ return result(r); }
+  const field = r.missing_required_fields[0];
+  const spec = FIELDS[field];
+  bubble(spec.q, 'bot');
+  renderInput(field, spec);
+}
+
+function renderInput(field, spec){
+  clearBar();
+  let input;
+  if(spec.type==='select'){
+    input=document.createElement('select');
+    spec.opts.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;input.appendChild(o);});
+  } else {
+    input=document.createElement('input'); input.placeholder=spec.ph||''; if(spec.type==='number') input.type='number';
+  }
+  const send=document.createElement('button'); send.textContent='Gửi';
+  const submit=async()=>{
+    let raw = input.value; if(raw==='' && spec.type!=='select'){ input.focus(); return; }
+    let val = spec.type==='money'?money(raw): spec.type==='number'?Number(raw): field==='credit_history.had_late_payment'?(raw==='true'): raw;
+    bubble(spec.type==='money'?val.toLocaleString('vi-VN')+' đ': (spec.type==='select'? (spec.opts.find(o=>o[0]==raw)||[])[1]||raw : raw), 'user');
+    const [sec,key]=field.split('.'); const patch={[sec]:{[key]:val}};
+    clearBar();
+    const r = await api('/sessions/'+sessionId+'/message', patch);
+    step(r);
+  };
+  send.onclick=submit; input.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+  bar.append(input,send); input.focus();
+}
+
+function result(r){
+  clearBar();
+  const d=r.decision, t=r.transparency_notice;
+  const card=document.createElement('div'); card.className='card '+d.outcome;
+  let html='<h3>'+t.ket_qua+'</h3>';
+  if(r.affordability && r.affordability.max_principal) html+='<div class="meta">Hạn mức ước tính: <b>'+Math.round(r.affordability.max_principal).toLocaleString('vi-VN')+' đ</b></div>';
+  if(d.reasons && d.reasons.length){ html+='<ul>'+d.reasons.map(x=>'<li>'+x+'</li>').join('')+'</ul>'; }
+  html+='<div class="meta" style="margin-top:10px">⚖ '+t.thong_bao+'</div>';
+  if(r.policy_citations && r.policy_citations.length){
+    html+='<div class="meta" style="margin-top:10px">Chính sách dẫn chiếu:</div>';
+    html+=r.policy_citations.map(c=>'<div class="cite">['+c.source+'] '+(c.dieu||'')+'</div>').join('');
+  }
+  card.innerHTML=html; chat.appendChild(card); chat.scrollTop=chat.scrollHeight;
+  const review=document.createElement('button'); review.className='ghost'; review.textContent='Yêu cầu nhân viên xét lại';
+  review.onclick=async()=>{ await api('/sessions/'+sessionId+'/review-request'); bubble('✓ Đã gửi yêu cầu xét duyệt thủ công. Nhân viên sẽ xem lại hồ sơ.','bot'); review.disabled=true; };
+  const again=document.createElement('button'); again.textContent='Hồ sơ mới'; again.onclick=start;
+  bar.append(review,again);
+}
+
+start().catch(e=>bubble('Không kết nối được server. Hãy chắc start-demo.bat đang chạy. ('+e+')','bot'));
+</script>
+</body>
+</html>

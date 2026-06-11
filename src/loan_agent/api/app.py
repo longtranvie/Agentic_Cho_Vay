@@ -9,8 +9,10 @@ Tài liệu tự sinh tại /docs.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from ..compliance.audit import AuditLog
@@ -63,6 +65,12 @@ def health() -> dict:
         "llm_provider": settings.llm_provider,
         "rag_backend": settings.rag_backend,
     }
+
+
+@app.get("/demo", response_class=HTMLResponse)
+def demo() -> str:
+    """Trang demo (chat trợ lý ảo) — phục vụ cùng origin để gọi API không vướng CORS."""
+    return (Path(__file__).parent / "demo.html").read_text(encoding="utf-8")
 
 
 def _completed_response(result: dict) -> dict:
