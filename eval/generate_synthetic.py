@@ -32,9 +32,9 @@ from loan_agent.eval import evaluate, summarize  # noqa: E402
 from loan_agent.graph import build_graph  # noqa: E402
 from loan_agent.llm.mock import MockLLM  # noqa: E402
 from loan_agent.rag.keyword_store import KeywordStore  # noqa: E402
-from loan_agent.rules.scorecard import _normalize  # noqa: E402
 from loan_agent.service import run_assessment  # noqa: E402
 from loan_agent.tools.financial import debt_to_income, monthly_payment  # noqa: E402
+from loan_agent.tools.text import strip_accents  # noqa: E402
 
 OCCUPATIONS = [
     "nhan vien van phong", "cong nhan", "giao vien", "ky su", "ban hang",
@@ -62,9 +62,9 @@ def _oracle(app: dict, table: dict) -> tuple[str, str, str]:
         return "reject", "high", "Thu nhập dưới sàn tối thiểu → knock-out"
     if loan["amount"] > ko["max_loan_amount"]:
         return "reject", "high", "Vượt trần khoản vay → knock-out"
-    purpose = _normalize(loan["purpose"])
+    purpose = strip_accents(loan["purpose"])
     for term in ko.get("forbidden_purposes", []):
-        if _normalize(term) in purpose:
+        if strip_accents(term) in purpose:
             return "reject", "high", f"Mục đích cấm ('{term}') Điều 8 → knock-out"
     payment = monthly_payment(loan["amount"], table["interest_rate"]["annual"], loan["term_months"])
     dti = debt_to_income(income, debt["monthly_payment"], payment)

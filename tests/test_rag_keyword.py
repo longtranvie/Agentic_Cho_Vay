@@ -24,7 +24,15 @@ def test_retrieve_returns_most_relevant():
 
 def test_retrieve_empty_when_no_overlap():
     store = KeywordStore(DOCS)
-    assert store.retrieve("xyz khong lien quan zzz", k=3) == []
+    assert store.retrieve("xyz zzz qqq www", k=3) == []
+
+
+def test_retrieve_diacritic_insensitive():
+    # Query KHÔNG dấu vẫn khớp nội dung CÓ dấu ("dieu kien" ~ "Điều kiện").
+    store = KeywordStore(DOCS)
+    res = store.retrieve("dieu kien vay von", k=1)
+    assert len(res) == 1
+    assert res[0].dieu == "Điều 7"
 
 
 def test_chunk_markdown_splits_by_dieu():

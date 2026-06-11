@@ -8,10 +8,11 @@ from __future__ import annotations
 import re
 
 from ..schemas import PolicyCitation
+from ..tools.text import strip_accents
 
 
 def _tokens(text: str) -> set[str]:
-    return set(re.findall(r"\w+", text.lower()))
+    return set(re.findall(r"\w+", strip_accents(text)))
 
 
 class KeywordStore:
