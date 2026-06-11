@@ -51,12 +51,23 @@ def _format_citations(policy: PolicyResult) -> str:
     )
 
 
+def _format_transcript(transcript: list[dict]) -> str:
+    """Render các lượt đã phát biểu để đưa vào prompt agent sau / Judge (tạo tương tác)."""
+    if not transcript:
+        return "(chưa có ai phát biểu)"
+    return "\n".join(
+        f"- {t.get('role')} ({t.get('stance')}): {'; '.join(t.get('arguments', []))}"
+        for t in transcript
+    )
+
+
 def run_deliberation(
     risk: RiskResult,
     policy: PolicyResult,
     llm,
     table: dict,
     app: LoanApplication,
+    rounds: int = 1,
 ) -> Deliberation:
     mode = convene_check(risk, policy, table)
     if mode == "skip":
@@ -71,23 +82,29 @@ def run_deliberation(
     cites = _format_citations(policy)
     roles = _ROLES_LIGHT if mode == "light" else _ROLES_FULL
     transcript: list[dict] = []
-    for role in roles:
-        prompt = (
-            f"Bạn là {role} trong HỘI ĐỒNG THẨM ĐỊNH KHOẢN VAY.\n"
-            f"Hồ sơ: {brief}\n"
-            f"Chính sách liên quan:\n{cites}\n"
-            f"Nêu quan điểm (stance: lean_approve / neutral / lean_reject) và lập luận "
-            f"ngắn gọn, BÁM dữ liệu hồ sơ và chính sách trên (không tranh luận chung chung)."
-        )
-        transcript.append(llm.structured(prompt, AgentTurn).model_dump(mode="json"))
+    # Mỗi agent ĐỌC các lượt trước (transcript) → phản biện nhau. Nhiều vòng = tranh luận sâu hơn.
+    for _ in range(max(1, rounds)):
+        for role in roles:
+            prompt = (
+                f"Bạn là {role} trong HỘI ĐỒNG THẨM ĐỊNH KHOẢN VAY.\n"
+                f"Hồ sơ: {brief}\n"
+                f"Chính sách liên quan:\n{cites}\n"
+                f"Các phát biểu trước trong hội đồng:\n{_format_transcript(transcript)}\n"
+                f"Nêu quan điểm (stance: lean_approve / neutral / lean_reject) và lập luận "
+                f"ngắn, BÁM dữ liệu hồ sơ và chính sách. Nếu KHÔNG đồng ý với phát biểu nào "
+                f"ở trên, PHẢN BIỆN cụ thể (điền rebuttals)."
+            )
+            transcript.append(llm.structured(prompt, AgentTurn).model_dump(mode="json"))
 
     allowed = ", ".join(table["blocking_flags"].keys())
     verdict_prompt = (
         f"Bạn là Judge tổng hợp HỘI ĐỒNG THẨM ĐỊNH KHOẢN VAY.\n"
         f"Hồ sơ: {brief}\n"
-        f"Đưa khuyến nghị (recommendation: lean_approve / lean_review / lean_reject). "
-        f"CHỈ nêu cờ rủi ro (blocking_flags) NẾU thực sự có vấn đề, và phải chọn TRONG "
-        f"danh sách: [{allowed}]. TUYỆT ĐỐI không tạo cờ ngoài danh sách; không có thì để rỗng."
+        f"Toàn bộ tranh luận của hội đồng:\n{_format_transcript(transcript)}\n"
+        f"TỔNG HỢP các lập luận trên thành khuyến nghị (recommendation: lean_approve / "
+        f"lean_review / lean_reject). CHỈ nêu cờ rủi ro (blocking_flags) NẾU thực sự có vấn "
+        f"đề, và phải chọn TRONG danh sách: [{allowed}]. TUYỆT ĐỐI không tạo cờ ngoài danh "
+        f"sách; không có thì để rỗng."
     )
     verdict = llm.structured(verdict_prompt, JudgeVerdict)
     # Lọc cờ: chỉ giữ cờ thuộc bảng cấu hình (LLM thật có thể bịa cờ ngoài danh sách).

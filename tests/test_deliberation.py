@@ -53,3 +53,28 @@ def test_blocking_flags_filtered_to_known_keys():
 def test_recommendation_is_valid_enum_value():
     delib = run_deliberation(_mid_risk(), PolicyResult(compliant=True), _NoisyLLM(), TABLE, APP)
     assert delib.recommendation in set(Recommendation)
+
+
+class _RecordingLLM:
+    """Ghi lại mọi prompt để kiểm tra agent có ĐỌC lượt trước không."""
+
+    def __init__(self):
+        self.prompts: list[str] = []
+
+    def complete(self, prompt: str) -> str:
+        return ""
+
+    def structured(self, prompt: str, schema):
+        self.prompts.append(prompt)
+        if schema is AgentTurn:
+            return AgentTurn(role="Risk Analyst", stance="neutral", arguments=["luan diem X"])
+        return JudgeVerdict(recommendation="lean_review")
+
+
+def test_agents_read_prior_turns_and_judge_synthesizes():
+    spy = _RecordingLLM()
+    run_deliberation(_mid_risk(), PolicyResult(compliant=True), spy, TABLE, APP)
+    assert len(spy.prompts) == 5  # full: 4 agent + 1 judge
+    assert "chưa có ai phát biểu" in spy.prompts[0].lower()  # agent đầu chưa có lượt trước
+    assert "luan diem X" in spy.prompts[1]  # agent sau ĐỌC lập luận agent đầu (phản biện)
+    assert "luan diem X" in spy.prompts[-1]  # Judge TỔNG HỢP toàn bộ tranh luận

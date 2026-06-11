@@ -15,8 +15,11 @@ _STANCE = {"Advocate": "lean_approve", "Skeptic": "lean_reject"}
 
 
 def _role_from_prompt(prompt: str) -> str:
+    # Khớp marker vai CỦA AGENT ("Bạn là {role}"), không phải tên vai xuất hiện
+    # trong transcript phát biểu trước (nếu không sẽ nhận nhầm vai).
+    low = prompt.lower()
     for role in _ROLES:
-        if role.lower() in prompt.lower():
+        if f"bạn là {role.lower()}" in low:
             return role
     return "Risk Analyst"
 
