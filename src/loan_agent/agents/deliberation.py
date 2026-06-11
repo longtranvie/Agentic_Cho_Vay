@@ -20,6 +20,14 @@ from ..schemas import (
 _ROLES_FULL = ["Risk Analyst", "Advocate", "Skeptic", "Policy"]
 _ROLES_LIGHT = ["Skeptic"]
 
+# Nhiệm vụ RIÊNG từng vai — để các agent giữ lập trường ĐỐI KHÁNG, không a dua theo nhau.
+_PERSONAS = {
+    "Risk Analyst": "phân tích rủi ro TRUNG LẬP theo số liệu (DTI, điểm, thu nhập), không thiên vị bên nào.",
+    "Advocate": "là LUẬT SƯ CỦA KHÁCH HÀNG — tìm điểm có lợi, nêu yếu tố giảm nhẹ, PHẢN BÁC các lập luận tiêu cực phía trên nếu chúng quá khắt khe; nghiêng về ĐỀ NGHỊ DUYỆT khi có cơ sở.",
+    "Skeptic": "là người thẩm định KHẮT KHE — chủ động BỚI rủi ro, nghi ngờ, phản biện các điểm lạc quan phía trên.",
+    "Policy": "chỉ soi TUÂN THỦ PHÁP LÝ — đối chiếu hồ sơ với chính sách/điều luật trích dẫn, nêu vi phạm nếu có.",
+}
+
 
 def convene_check(risk: RiskResult, policy: PolicyResult, table: dict) -> str:
     """Quyết định có họp hội đồng không: skip | light | full (ADR-0023)."""
@@ -87,12 +95,13 @@ def run_deliberation(
         for role in roles:
             prompt = (
                 f"Bạn là {role} trong HỘI ĐỒNG THẨM ĐỊNH KHOẢN VAY.\n"
+                f"VAI TRÒ CỦA BẠN: {_PERSONAS.get(role, 'phân tích khách quan.')}\n"
                 f"Hồ sơ: {brief}\n"
                 f"Chính sách liên quan:\n{cites}\n"
                 f"Các phát biểu trước trong hội đồng:\n{_format_transcript(transcript)}\n"
                 f"Nêu quan điểm (stance: lean_approve / neutral / lean_reject) và lập luận "
-                f"ngắn, BÁM dữ liệu hồ sơ và chính sách. Nếu KHÔNG đồng ý với phát biểu nào "
-                f"ở trên, PHẢN BIỆN cụ thể (điền rebuttals)."
+                f"ngắn BÁM dữ liệu. GIỮ ĐÚNG VAI của mình, KHÔNG a dua theo người nói trước; "
+                f"nếu bất đồng với phát biểu nào ở trên, PHẢN BIỆN cụ thể (điền rebuttals)."
             )
             transcript.append(llm.structured(prompt, AgentTurn).model_dump(mode="json"))
 
